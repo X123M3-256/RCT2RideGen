@@ -4,7 +4,6 @@
 #include <string.h>
 #include <assert.h>
 #include <jansson.h>
-#include <object.h>
 #include "project.h"
 
 #define SQRT_2 1.4142135623731

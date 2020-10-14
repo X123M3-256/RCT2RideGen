@@ -1,7 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
-#include <object.h>
+#include <math.h>
 #include <image.h>
+#include <jansson.h>
 #include "project.h"
 
 
@@ -138,80 +139,84 @@ context_end_render(context);
 
 int project_export(project_t* project,context_t* context)
 {
-ride_t ride;
+json_t* json=json_object();
+json_object_set_new(json,"id",json_string(project->filename));
+json_object_set_new(json,"originalID",json_string("00000005|#RMCT1  |00000000"));
+json_object_set_new(json,"version",json_string("1.0"));
+json_object_set_new(json,"sourceGame",json_string("custom"));
 
-ride.track_pieces=0xFFFFFFFFFFFFFFFFULL;
-ride.flags=14336;
-ride.zero_cars=project->zero_cars;
-ride.preview_index=0;
-ride.track_types[0]=project->track_type;
-ride.track_types[1]=0xFF;
-ride.track_types[2]=0xFF;
-ride.excitement=0;
-ride.intensity=0;
-ride.nausea=0;
-ride.max_height=0;
-ride.categories[0]=CATEGORY_ROLLERCOASTER;
-ride.categories[1]=0xFF;
-ride.min_cars_per_train=project->min_cars_per_train;
-ride.max_cars_per_train=project->max_cars_per_train;
-ride.flat_ride_cars=0xFF;
-ride.tab_vehicle=0;
-ride.default_vehicle=project->configuration[CAR_INDEX_DEFAULT];
-ride.front_vehicle=project->configuration[CAR_INDEX_FRONT];
-ride.second_vehicle=project->configuration[CAR_INDEX_SECOND];
-ride.rear_vehicle=project->configuration[CAR_INDEX_REAR];
-ride.third_vehicle=project->configuration[CAR_INDEX_THIRD];
-ride.shop_item=0xFF;
-ride.shop_item_secondary=0xFF;
+json_t* authors=json_array();
+json_array_append_new(authors,json_string("Edward Calver"));
+json_object_set_new(json,"authors",authors);
 
+json_object_set_new(json,"objectType",json_string("ride"));
 
-color_scheme_t colors={{0,0,0}};
-ride.default_colors=&colors;
-ride.num_default_colors=1;
+//Ride header
+json_t* properties=json_object();
+json_t* types=json_array();
+json_array_append_new(types,json_string("junior_rc"));
+json_object_set_new(properties,"type",types);
+//json_object_set_new(properties,"noInversions",json_false());
+json_object_set_new(properties,"minCarsPerTrain",json_integer(4));
+json_object_set_new(properties,"maxCarsPerTrain",json_integer(7));
+//json_object_set_new(properties,"numEmptyCars",json_integer(0));
+//json_object_set_new(properties,"tabCar",json_integer(0));
+//json_object_set_new(properties,"headCars",json_integer(0));
+//json_object_set_new(properties,"tailCars",json_integer(0));
+//json_object_set_new(properties,"ratingMultiplier",json_integer(0));
+json_object_set_new(properties,"buildMenuPriority",json_integer(1));
+json_t* car_color_presets=json_array();
+json_t* car_color_preset=json_array();
+json_array_append_new(car_color_preset,json_string("black"));
+json_array_append_new(car_color_preset,json_string("black"));
+json_array_append_new(car_color_preset,json_string("black"));
+json_array_append_new(car_color_presets,car_color_preset);
+json_object_set_new(properties,"carColours",car_color_presets);
 
-
-string_table_init(&(ride.name));
-ride.name.strings[LANGUAGE_ENGLISH_UK]=project->name;
-string_table_init(&(ride.description));
-ride.description.strings[LANGUAGE_ENGLISH_UK]=project->description;
-string_table_init(&(ride.capacity));
-ride.capacity.strings[LANGUAGE_ENGLISH_UK]=project->capacity;
-
-
-memset(ride.vehicles,0,4*sizeof(ride_vehicle_t));
-
+json_t* cars=json_array();
 	for(int i=0;i<project->num_vehicles;i++)
 	{
-	ride_vehicle_t* vehicle=ride.vehicles+i;
-	vehicle->rotation_frame_mask=31; 
-	vehicle->spacing=(project->vehicles[i].spacing*262144)/TILE_SIZE;               
-	vehicle->friction=project->vehicles[i].mass;              
-	vehicle->tab_height=0;            
-	vehicle->num_seats=0;             
-	vehicle->sprites=project->vehicles[i].sprite_flags;               
-	vehicle->sprite_width=0;        //THESE ARE THE PROBLEM
-	vehicle->sprite_height_negative=0;//BYTES DO NOT WRITE
-	vehicle->sprite_height_positive=0;//FOR TRACKED RIDES
-	vehicle->vehicle_animation=0;  
-	vehicle->flags=ENABLE_ADDITIONAL_COLOR_1|ENABLE_ADDITIONAL_COLOR_2;
-	vehicle->num_rows=0;
-	vehicle->spin_inertia=0;
-	vehicle->spin_friction=0;
-	vehicle->running_sound=RUNNING_SOUND_STEEL_SMOOTH;
-	vehicle->var_58=0;
-	vehicle->secondary_sound=SECONDARY_SOUND_SCREAMS_1;
-	vehicle->var_5A=0;
-	vehicle->powered_acceleration=0; 
-	vehicle->powered_max_speed=0;    
-	vehicle->car_visual=0;           
-	vehicle->effect_visual=1;        
-	vehicle->z_value=5;              
-	vehicle->special_frames=0;
-	vehicle->peep_positions=NULL;
-	vehicle->num_peep_positions=0;
+	json_t* car=json_object();
+	json_object_set_new(car,"rotationFrameMask",json_integer(31));
+	json_object_set_new(car,"spacing",json_integer((project->vehicles[i].spacing*262144)/TILE_SIZE));
+	json_object_set_new(car,"mass",json_integer(project->vehicles[i].mass));
+	json_object_set_new(car,"numSeats",json_integer(0));
+	json_object_set_new(car,"numSeatRows",json_integer(0));
+	json_object_set_new(car,"frictionSoundId",json_integer(1));
+	json_object_set_new(car,"soundRange",json_integer(1));
+	json_object_set_new(car,"drawOrder",json_integer(6));
+	json_t* frames=json_object();
+		if(project->vehicles[i].sprite_flags&SPRITE_FLAT_SLOPE)json_object_set_new(frames,"flat",json_true());
+		if(project->vehicles[i].sprite_flags&SPRITE_GENTLE_SLOPE)json_object_set_new(frames,"gentleSlopes",json_true());
+		if(project->vehicles[i].sprite_flags&SPRITE_STEEP_SLOPE)json_object_set_new(frames,"steepSlopes",json_true());
+		if(project->vehicles[i].sprite_flags&SPRITE_DIAGONAL_SLOPE)json_object_set_new(frames,"diagonalSlopes",json_true());
+	json_object_set_new(car,"frames",frames);
+	json_object_set_new(car,"VEHICLE_ENTRY_FLAG_ENABLE_ADDITIONAL_COLOUR_1",json_true());
+	json_object_set_new(car,"VEHICLE_ENTRY_FLAG_ENABLE_ADDITIONAL_COLOUR_2",json_true());
+	json_object_set_new(car,"loadingPositions",json_array());
 	}
+json_object_set_new(properties,"cars",cars);
+json_object_set_new(json,"properties",properties);
 
+//String tables
+json_t* strings=json_object();
+json_t* name=json_object();
+json_object_set_new(name,"en-GB",json_string(project->name));
+json_object_set_new(strings,"name",name);
+json_t* description=json_object();
+json_object_set_new(description,"en-GB",json_string(project->description));
+json_object_set_new(strings,"description",description);
+json_t* capacity=json_object();
+json_object_set_new(capacity,"en-GB",json_string(project->capacity));
+json_object_set_new(strings,"capacity",capacity);
+json_object_set_new(json,"strings",strings);
+
+char fullname[256];
+sprintf(fullname,"%s.json",project->filename);
+json_dump_file(json,fullname,JSON_INDENT(4));
+
+
+/*
 ride.sprites.images=malloc(project->num_sprites*sizeof(image_t));
 ride.sprites.num_images=project->num_sprites;
 
@@ -227,48 +232,6 @@ int current_sprite=3;
 	render_vehicle(context,&(project->vehicles[i].mesh),ride.sprites.images+current_sprite,project->vehicles[i].sprite_flags);
 	current_sprite+=project->vehicles[i].num_sprites;
 	}
-
-/*
-	for(int i=0;i<ride.sprites.num_images;i++)
-	{
-	char filename[255];
-	sprintf(filename,"sprites/sprite_%d.png",i);
-	FILE* file=fopen(filename,"w");
-	image_write_png(ride.sprites.images+i,file);
-	fclose(file);
-	}
 */
-
-object_t object;
-object.flags=0;
-object.checksum=0x20434D52;
-memset(object.name,' ',8);
-memcpy(object.name,project->filename,strlen((char*)project->filename));
-
-
-uint8_t* data;uint32_t length;
-error_t error=ride_encode(&ride,ENCODING_RLE,&(object.chunk));
-    if(error!=ERROR_NONE)
-    {
-    printf("Error: %s\n",error_string(error));
-    }
-char output_path[512];
-sprintf(output_path,"/Users/ec2618/Library/Application Support/OpenRCT2/object/%s.DAT",project->filename);
-printf("%s\n",output_path);
-FILE* file=fopen(output_path,"w");
-    if(file==NULL)
-    {
-    printf("Could not open file for writing\n");
-    return 1;
-    }
-error=object_write(&object,file);
-
-    if(error!=ERROR_NONE)
-    {
-    printf("Could not write file\n");
-    object_destroy(&object);
-    return 1;
-    }
-object_destroy(&object);
 return 0;
 }
