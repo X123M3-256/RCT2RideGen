@@ -7,7 +7,7 @@
 #define TILE_SIZE 3.3
 
 
-enum //Ride flags
+typedef enum //Ride flags
 {
 VEHICLE_TAB_SCALE_HALF=             0x00000001u,
 NO_INVERSIONS=                      0x00000002u,
@@ -31,7 +31,7 @@ FLAG_18=                            0x00040000u,
 FLAG_DISABLE_COLOUR_TAB=            0x00080000u,// Must be set with swing mode 1 as well.
 ALTERNATIVE_SWING_MODE_2=           0x00100000u
 }ride_flags_t;
-enum //Vehicle flags
+typedef enum //Vehicle flags
 {
 FLAG_A_0=                           0x00000001u,
 NO_UPSTOP_WHEELS=                   0x00000002u,
@@ -66,7 +66,7 @@ FLAG_B_13=                          0x20000000u,
 FLAG_B_14=                          0x40000000u,
 FLAG_B_15=                          0x80000000u
 }vehicle_flags_t;
-enum //Sprite flags
+typedef enum //Sprite flags
 {
 SPRITE_FLAT_SLOPE=0x0001,
 SPRITE_GENTLE_SLOPE=0x0002,
@@ -84,7 +84,7 @@ SPRITE_CORKSCREW=0x1000,
 SPRITE_RESTRAINT_ANIMATION=0x2000,
 SPRITE_SPIRAL_LIFT=0x4000
 }sprite_flags_t;
-enum //Vehicle animation types
+typedef enum //Vehicle animation types
 {
 ANIMATION_TYPE_NONE=0,
 ANIMATION_TYPE_STEAM=1,
@@ -97,7 +97,7 @@ ANIMATION_TYPE_7=7,
 ANIMATION_TYPE_8=8,
 ANIMATION_TYPE_MULTIDIMENSION=9
 }animation_types_t;
-enum //Ride primary sounds
+typedef enum //Ride primary sounds
 {
 RUNNING_SOUND_WOODEN_OLD=1,
 RUNNING_SOUND_WOODEN_MODERN=54,
@@ -108,7 +108,7 @@ RUNNING_SOUND_TRAIN=31,
 RUNNING_SOUND_ENGINE=21,
 RUNNING_SOUND_NONE=255
 }running_sound_t;
-enum //Ride secondary sounds
+typedef enum //Ride secondary sounds
 {
 SECONDARY_SOUND_SCREAMS_1=0,
 SECONDARY_SOUND_SCREAMS_2=1,
@@ -117,7 +117,7 @@ SECONDARY_SOUND_WHISTLE=3,
 SECONDARY_SOUND_BELL=4,
 SECONDARY_SOUND_NONE=255,
 }secondary_sound_t;
-enum //Car position indices
+typedef enum //Car position indices
 {
 CAR_INDEX_DEFAULT=0,
 CAR_INDEX_FRONT=1,
@@ -125,7 +125,7 @@ CAR_INDEX_SECOND=2,
 CAR_INDEX_THIRD=4,
 CAR_INDEX_REAR=3
 }car_index_t;
-enum //Ride categories
+typedef enum //Ride categories
 {
 CATEGORY_TRANSPORT_RIDE=0,
 CATEGORY_GENTLE_RIDE=1,
@@ -203,12 +203,12 @@ float spacing;
 
 typedef struct
 {
-uint8_t* filename;
+uint8_t* id;
 uint32_t checksum;
 uint8_t* name;
 uint8_t* description;
 uint8_t* capacity;
-uint8_t track_type;
+uint8_t* track_type;
 uint8_t zero_cars;
 uint8_t min_cars_per_train;
 uint8_t max_cars_per_train;
@@ -218,6 +218,6 @@ uint32_t num_vehicles;
 vehicle_t vehicles[4];
 }project_t;
 
-int project_export(project_t* project,context_t* context);
+int project_export(project_t* project,context_t* context,const char* output_directory);
 
 #endif

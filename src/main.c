@@ -57,18 +57,13 @@ return 2;
 
 int load_project(project_t* project,json_t* json)
 {
-json_t* filename=json_object_get(json,"filename");
-	if(filename==NULL||!json_is_string(filename))
+json_t* id=json_object_get(json,"id");
+	if(id==NULL||!json_is_string(id))
 	{
 	printf("Error: No property \"filename\" found\n");
 	return 1;
 	}
-	if(strlen(json_string_value(filename))>8)
-	{
-	printf("Error: Filename is too long (maximum 8 characters)\n");
-	return 1;
-	}
-project->filename=(uint8_t*)strdup(json_string_value(filename));
+project->id=(uint8_t*)strdup(json_string_value(id));
 
 json_t* name=json_object_get(json,"name");
 	if(name==NULL||!json_is_string(name))
@@ -94,11 +89,12 @@ json_t* capacity=json_object_get(json,"capacity");
 	}
 project->capacity=(uint8_t*)strdup(json_string_value(capacity));
 
+//TODO check if track type is valid
 json_t* track_type=json_object_get(json,"track_type");
-	if(track_type!=NULL&&json_is_integer(track_type))project->track_type=json_integer_value(track_type);
+	if(track_type!=NULL&&json_is_string(track_type))project->track_type=strdup(json_string_value(track_type));
 	else
 	{
-	printf("Error: Property \"track_type\" not found or is not a integer\n");
+	printf("Error: Property \"track_type\" not found or is not a string\n");
 	return 1;
 	}
 
@@ -221,7 +217,15 @@ json_t* project_json=json_load_file(argv[1],0,&error);
 	return 1;
 	}
 
+json_t* output_directory=json_object_get(project_json,"output_directory");
+	if(output_directory==NULL||!json_is_string(output_directory))
+	{
+	printf("Error: No property \"output_directory\" found\n");
+	return 1;
+	}
+
 	if(load_project(&project,project_json))return 1;
+
 
 context_t context;
 light_t lights[9]={
@@ -235,10 +239,9 @@ light_t lights[9]={
 	{LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.65,0.816,-0.65000000)),0.25},
 	{LIGHT_DIFFUSE,0,vector3_normalize(vector3(-1.0,0.0,-1.0)),0.25},
 };
-
 context_init(&context,lights,9,palette_rct2(),TILE_SIZE);
 
-	if(project_export(&project,&context))return 1;
+	if(project_export(&project,&context,json_string_value(output_directory)))return 1;
 
 context_destroy(&context);
 return 0;

@@ -34,17 +34,44 @@
 #define CORKSCREW_LEFT_PITCH(angle) (-CORKSCREW_RIGHT_PITCH(-angle))
 #define CORKSCREW_LEFT_ROLL(angle) (-CORKSCREW_RIGHT_ROLL(angle))
 
-
-void render_rotation(context_t* context,mesh_t* mesh,image_t* images,int num_frames,float pitch,float roll,float yaw)
+json_t* json_image(const char* path,int x,int y)
 {
+json_t* image=json_object();
+json_object_set_new(image,"path",json_string(path));
+json_object_set_new(image,"x",json_integer(x));
+json_object_set_new(image,"y",json_integer(y));
+return image;
+}
+
+
+void render_rotation(context_t* context,mesh_t* mesh,int num_frames,float pitch,float roll,float yaw,json_t* images,const char* output_directory)
+{
+int base_index=json_array_size(images);
 	for(int i=0;i<num_frames;i++)
 	{
-	context_render_view(context,matrix_mult(rotate_y((2*i*M_PI)/num_frames),rotate_z(pitch)),images+i);
+	image_t image;
+	context_render_view(context,matrix_mult(rotate_y((2*i*M_PI)/num_frames),rotate_z(pitch)),&image);
+	
+	char path[256];
+	char fullpath[256];
+	sprintf(path,"images/%d.png",base_index+i);
+	sprintf(fullpath,"%s%s",output_directory,path);
+	printf("%s%s\n",output_directory,path);
+	
+	//Write image file	
+	FILE* file=fopen(fullpath,"w");
+	image_write_png(&image,file);
+	fclose(file);
+	
+	//Write image JSON
+	json_array_append_new(images,json_image(path,image.x_offset,image.y_offset));
+	
+	image_destroy(&image);
 	}
 
 }
 
-void render_vehicle(context_t* context,mesh_t* mesh,image_t* images,int sprite_flags)
+void render_vehicle(context_t* context,mesh_t* mesh,int sprite_flags,json_t* images,const char* output_directory)
 {
 context_begin_render(context);
 context_add_model(context,mesh,transform(matrix_identity(),vector3(0,0,0)),0); 
@@ -55,95 +82,94 @@ int base_frame=0;
 	if(sprite_flags&SPRITE_FLAT_SLOPE)
 	{
 	printf("Rendering flat sprites\n");
-        render_rotation(context,mesh,images+base_frame,32,FLAT,0,0);
+        render_rotation(context,mesh,32,FLAT,0,0,images,output_directory);
         base_frame+=32;
         }
 	if(sprite_flags&SPRITE_GENTLE_SLOPE)
 	{
 	printf("Rendering gentle sprites\n");
-	render_rotation(context,mesh,images+base_frame,4,FG_TRANSITION,0,0);
+	render_rotation(context,mesh,4,FG_TRANSITION,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-FG_TRANSITION,0,0);
+	render_rotation(context,mesh,4,-FG_TRANSITION,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,32,GENTLE,0,0);
+	render_rotation(context,mesh,32,GENTLE,0,0,images,output_directory);
 	base_frame+=32;
-	render_rotation(context,mesh,images+base_frame,32,-GENTLE,0,0);
+	render_rotation(context,mesh,32,-GENTLE,0,0,images,output_directory);
 	base_frame+=32;
 	}
 	if(sprite_flags&SPRITE_STEEP_SLOPE)
 	{
 	printf("Rendering steep sprites\n");
-	render_rotation(context,mesh,images+base_frame,8,GS_TRANSITION,0,0);
+	render_rotation(context,mesh,8,GS_TRANSITION,0,0,images,output_directory);
 	base_frame+=8;
-	render_rotation(context,mesh,images+base_frame,8,-GS_TRANSITION,0,0);
+	render_rotation(context,mesh,8,-GS_TRANSITION,0,0,images,output_directory);
 	base_frame+=8;
-	render_rotation(context,mesh,images+base_frame,32,STEEP,0,0);
+	render_rotation(context,mesh,32,STEEP,0,0,images,output_directory);
 	base_frame+=32;
-	render_rotation(context,mesh,images+base_frame,32,-STEEP,0,0);
+	render_rotation(context,mesh,32,-STEEP,0,0,images,output_directory);
 	base_frame+=32;
 	}
 	if(sprite_flags&SPRITE_VERTICAL_SLOPE)
 	{
 	printf("Rendering vertical sprites\n");
-	render_rotation(context,mesh,images+base_frame,4,SV_TRANSITION,0,0);
+	render_rotation(context,mesh,4,SV_TRANSITION,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-SV_TRANSITION,0,0);
+	render_rotation(context,mesh,4,-SV_TRANSITION,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,32,VERTICAL,0,0);
+	render_rotation(context,mesh,32,VERTICAL,0,0,images,output_directory);
 	base_frame+=32;
-	render_rotation(context,mesh,images+base_frame,32,-VERTICAL,0,0);
+	render_rotation(context,mesh,32,-VERTICAL,0,0,images,output_directory);
 	base_frame+=32;
-	render_rotation(context,mesh,images+base_frame,4,VERTICAL+M_PI_12,0,0);
+	render_rotation(context,mesh,4,VERTICAL+M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-VERTICAL-M_PI_12,0,0);
+	render_rotation(context,mesh,4,-VERTICAL-M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,VERTICAL+2*M_PI_12,0,0);
+	render_rotation(context,mesh,4,VERTICAL+2*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-VERTICAL-2*M_PI_12,0,0);
+	render_rotation(context,mesh,4,-VERTICAL-2*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,VERTICAL+3*M_PI_12,0,0);
+	render_rotation(context,mesh,4,VERTICAL+3*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-VERTICAL-3*M_PI_12,0,0);
+	render_rotation(context,mesh,4,-VERTICAL-3*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,VERTICAL+4*M_PI_12,0,0);
+	render_rotation(context,mesh,4,VERTICAL+4*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-VERTICAL-4*M_PI_12,0,0);
+	render_rotation(context,mesh,4,-VERTICAL-4*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,VERTICAL+5*M_PI_12,0,0);
+	render_rotation(context,mesh,4,VERTICAL+5*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-VERTICAL-5*M_PI_12,0,0);
+	render_rotation(context,mesh,4,-VERTICAL-5*M_PI_12,0,0,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,M_PI,0,0);
+	render_rotation(context,mesh,4,M_PI,0,0,images,output_directory);
 	base_frame+=4;
 	}
 	if(sprite_flags&SPRITE_DIAGONAL_SLOPE)
 	{
 	printf("Rendering diagonal sprites\n");
-	render_rotation(context,mesh,images+base_frame,4,FG_TRANSITION_DIAGONAL,0,M_PI_4);
+	render_rotation(context,mesh,4,FG_TRANSITION_DIAGONAL,0,M_PI_4,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-FG_TRANSITION_DIAGONAL,0,M_PI_4);
+	render_rotation(context,mesh,4,-FG_TRANSITION_DIAGONAL,0,M_PI_4,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,GENTLE_DIAGONAL,0,M_PI_4);
+	render_rotation(context,mesh,4,GENTLE_DIAGONAL,0,M_PI_4,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-GENTLE_DIAGONAL,0,M_PI_4);
+	render_rotation(context,mesh,4,-GENTLE_DIAGONAL,0,M_PI_4,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,STEEP_DIAGONAL,0,M_PI_4);
+	render_rotation(context,mesh,4,STEEP_DIAGONAL,0,M_PI_4,images,output_directory);
 	base_frame+=4;
-	render_rotation(context,mesh,images+base_frame,4,-STEEP_DIAGONAL,0,M_PI_4);
+	render_rotation(context,mesh,4,-STEEP_DIAGONAL,0,M_PI_4,images,output_directory);
 	base_frame+=4;
 	}
 
 context_end_render(context);
 }
 
-
-int project_export(project_t* project,context_t* context)
+int project_export(project_t* project,context_t* context,const char* output_directory)
 {
 json_t* json=json_object();
-json_object_set_new(json,"id",json_string(project->filename));
+json_object_set_new(json,"id",json_string(project->id));
 json_object_set_new(json,"originalID",json_string("00000005|#RMCT1  |00000000"));
 json_object_set_new(json,"version",json_string("1.0"));
-json_object_set_new(json,"sourceGame",json_string("custom"));
+//json_object_set_new(json,"sourceGame",json_string("custom"));
 
 json_t* authors=json_array();
 json_array_append_new(authors,json_string("Edward Calver"));
@@ -154,15 +180,16 @@ json_object_set_new(json,"objectType",json_string("ride"));
 //Ride header
 json_t* properties=json_object();
 json_t* types=json_array();
-json_array_append_new(types,json_string("junior_rc"));
+json_array_append_new(types,json_string("mini_rc"));
 json_object_set_new(properties,"type",types);
 //json_object_set_new(properties,"noInversions",json_false());
 json_object_set_new(properties,"minCarsPerTrain",json_integer(4));
 json_object_set_new(properties,"maxCarsPerTrain",json_integer(7));
 //json_object_set_new(properties,"numEmptyCars",json_integer(0));
 //json_object_set_new(properties,"tabCar",json_integer(0));
-//json_object_set_new(properties,"headCars",json_integer(0));
-//json_object_set_new(properties,"tailCars",json_integer(0));
+json_object_set_new(properties,"defaultCar",json_integer(project->configuration[CAR_INDEX_DEFAULT]));
+	if(project->configuration[CAR_INDEX_FRONT]!=0xFF)json_object_set_new(properties,"headCars",json_integer(project->configuration[CAR_INDEX_FRONT]));//TODO support multiple head cars
+	if(project->configuration[CAR_INDEX_REAR]!=0xFF)json_object_set_new(properties,"headCars",json_integer(project->configuration[CAR_INDEX_REAR]));
 //json_object_set_new(properties,"ratingMultiplier",json_integer(0));
 json_object_set_new(properties,"buildMenuPriority",json_integer(1));
 json_t* car_color_presets=json_array();
@@ -194,6 +221,7 @@ json_t* cars=json_array();
 	json_object_set_new(car,"VEHICLE_ENTRY_FLAG_ENABLE_ADDITIONAL_COLOUR_1",json_true());
 	json_object_set_new(car,"VEHICLE_ENTRY_FLAG_ENABLE_ADDITIONAL_COLOUR_2",json_true());
 	json_object_set_new(car,"loadingPositions",json_array());
+	json_array_append_new(cars,car);
 	}
 json_object_set_new(properties,"cars",cars);
 json_object_set_new(json,"properties",properties);
@@ -211,27 +239,24 @@ json_object_set_new(capacity,"en-GB",json_string(project->capacity));
 json_object_set_new(strings,"capacity",capacity);
 json_object_set_new(json,"strings",strings);
 
-char fullname[256];
-sprintf(fullname,"%s.json",project->filename);
-json_dump_file(json,fullname,JSON_INDENT(4));
 
-
-/*
-ride.sprites.images=malloc(project->num_sprites*sizeof(image_t));
-ride.sprites.num_images=project->num_sprites;
+json_t* images=json_array();
 
 	for(int i=0;i<3;i++)
 	{
-	image_new(ride.sprites.images+i,1,1,0,0,0x5);
+	json_array_append_new(images,json_image("images/placeholder.png",0,0));
 	}
 
-int current_sprite=3;
 	for(int i=0;i<project->num_vehicles;i++)
 	{
 	printf("Vehicle %d\n",i);
-	render_vehicle(context,&(project->vehicles[i].mesh),ride.sprites.images+current_sprite,project->vehicles[i].sprite_flags);
-	current_sprite+=project->vehicles[i].num_sprites;
+	render_vehicle(context,&(project->vehicles[i].mesh),project->vehicles[i].sprite_flags,images,output_directory);
 	}
-*/
+
+json_object_set_new(json,"images",images);
+
+char fullpath[256];
+sprintf(fullpath,"%s%s.json",output_directory,project->id);
+json_dump_file(json,fullpath,JSON_INDENT(4));
 return 0;
 }
