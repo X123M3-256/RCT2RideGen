@@ -6,6 +6,9 @@
 
 #define TILE_SIZE 3.3
 
+#define PROJECT_MAX_MESHES 16
+#define PROJECT_MAX_VEHICLES 4
+#define PROJECT_MAX_RIDERS 16
 
 typedef enum //Ride flags
 {
@@ -190,15 +193,24 @@ CATEGORY_SHOP=5
 #define TRACK_HALF_LOOP_UNINVERT 0x0020000000000000l
 #define TRACK_HALF_LOOP_INVERT 0x0040000000000000l
 
-
+typedef struct
+{
+uint32_t mesh_index;
+vector3_t position;
+vector3_t orientation;
+}model_t;
 
 typedef struct
 {
-mesh_t mesh;
+model_t model;
 uint32_t mass;
 uint32_t sprite_flags;
 uint32_t num_sprites;
+uint32_t draw_order;
+uint32_t num_riders;
+uint32_t num_rider_models;
 float spacing;
+model_t riders[PROJECT_MAX_RIDERS];
 }vehicle_t;
 
 typedef struct
@@ -208,14 +220,16 @@ uint32_t checksum;
 uint8_t* name;
 uint8_t* description;
 uint8_t* capacity;
-uint8_t* track_type;
+uint8_t* ride_type;
 uint8_t zero_cars;
 uint8_t min_cars_per_train;
 uint8_t max_cars_per_train;
 uint8_t configuration[5];
 uint32_t num_sprites;
 uint32_t num_vehicles;
-vehicle_t vehicles[4];
+uint32_t num_meshes;
+mesh_t meshes[PROJECT_MAX_MESHES];
+vehicle_t vehicles[PROJECT_MAX_VEHICLES];
 }project_t;
 
 int project_export(project_t* project,context_t* context,const char* output_directory);
