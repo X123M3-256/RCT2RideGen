@@ -11,7 +11,6 @@
 //#include <zip.h>
 #include <image.h>
 #include "project.h"
-#include "pack.h"
 
 #define M_PI_8 (M_PI/8.0)
 #define M_PI_12 (M_PI/12.0)
@@ -42,6 +41,15 @@
 #define CORKSCREW_LEFT_PITCH(angle) (-CORKSCREW_RIGHT_PITCH(-angle))
 #define CORKSCREW_LEFT_ROLL(angle) (-CORKSCREW_RIGHT_ROLL(angle))
 
+
+const char* sprite_group_names[NUM_SPRITE_GROUPS]={"flat","gentle_slopes","steep_slopes","vertical_slopes","diagonals","banked_turns","inline_twists","slope_bank_transition","diagonal_bank_transition","sloped_bank_transition","banked_sloped_turns","banked_slope_transition","corkscrews"};
+const char* vehicle_flag_names[NUM_VEHICLE_FLAGS]={"secondary_remap","tertiary_remap","riders_scream","restraint_animation"};
+const char* running_sounds[NUM_RUNNING_SOUNDS]={"wooden_old","wooden","steel","steel_smooth","train","engine"};
+const char* secondary_sounds[NUM_SECONDARY_SOUNDS]={"scream1","scream2","scream3","bell"};
+const char* color_names[NUM_COLORS]={"black","grey","white","dark_purple","light_purple","bright_purple","dark_blue","light_blue","icy_blue","teal","aquamarine","saturated_green","dark_green","moss_green","bright_green","olive_green","dark_olive_green","bright_yellow","yellow","dark_yellow","light_orange","dark_orange","light_brown","saturated_brown","dark_brown","salmon_pink","bordeaux_red","saturated_red","bright_red","dark_pink","bright_pink","light_pink"};
+const char* category_names[NUM_CATEGORIES]={"transport","gentle","water","rollercoaster"};
+
+
 json_t* json_image(const char* path,int x,int y,int src_x,int src_y,int src_width,int src_height)
 {
 json_t* image=json_object();
@@ -59,28 +67,6 @@ json_object_set_new(image,"palette",json_string("keep"));
 return image;
 }
 
-
-
-int count_sprites_from_flags(uint16_t sprites)
-{
-int count=0;
-	if(sprites&SPRITE_FLAT_SLOPE)count+=32;
-	if(sprites&SPRITE_GENTLE_SLOPE)count+=72;
-	if(sprites&SPRITE_STEEP_SLOPE)count+=80;
-	if(sprites&SPRITE_VERTICAL_SLOPE)count+=116;
-	if(sprites&SPRITE_DIAGONAL_SLOPE)count+=24;
-	if(sprites&SPRITE_BANKING)count+=80;
-	if(sprites&SPRITE_INLINE_TWIST)count+=40;
-	if(sprites&SPRITE_SLOPE_BANK_TRANSITION)count+=128;
-	if(sprites&SPRITE_DIAGONAL_BANK_TRANSITION)count+=16;
-	if(sprites&SPRITE_SLOPED_BANK_TRANSITION)count+=16;
-	if(sprites&SPRITE_SLOPED_BANKED_TURN)count+=128;
-	if(sprites&SPRITE_BANKED_SLOPE_TRANSITION)count+=16;
-	if(sprites&SPRITE_CORKSCREW)count+=80;
-	if(sprites&SPRITE_RESTRAINT_ANIMATION)count+=12;
-return count;
-}
-
 void render_rotation(context_t* context,int num_frames,float pitch,float roll,float yaw,image_t* images)
 {
 	for(int i=0;i<num_frames;i++)
@@ -90,9 +76,17 @@ void render_rotation(context_t* context,int num_frames,float pitch,float roll,fl
 
 }
 
-void render_vehicle(context_t* context,project_t* project,int i,image_t* images)
+int render_vehicle(context_t* context,project_t* project,int i,image_t* images,int frame)
 {
-int sprite_flags=project->vehicles[i].sprite_flags;
+//Currently only restraint animations are supported
+	if(frame>0)
+	{
+	printf("Rendering restraint animation\n");
+        render_rotation(context,4,FLAT,0,0,images);
+	return 4;
+	}
+
+int sprite_flags=project->sprite_flags;
 
 int base=0;
 	if(sprite_flags&SPRITE_FLAT_SLOPE)
@@ -326,6 +320,40 @@ int base=0;
 	render_rotation(context,4,CORKSCREW_LEFT_PITCH(-CORKSCREW_ANGLE_5),CORKSCREW_LEFT_ROLL(-CORKSCREW_ANGLE_5),CORKSCREW_LEFT_YAW(-CORKSCREW_ANGLE_5),images+base);
 	base+=4;
         }
+return base;
+}
+
+
+
+int count_sprites_from_flags(uint16_t sprites,int flags)
+{
+int count=0;
+	if(sprites&SPRITE_FLAT_SLOPE)count+=32;
+	if(sprites&SPRITE_GENTLE_SLOPE)count+=72;
+	if(sprites&SPRITE_STEEP_SLOPE)count+=80;
+	if(sprites&SPRITE_VERTICAL_SLOPE)count+=116;
+	if(sprites&SPRITE_DIAGONAL_SLOPE)count+=24;
+	if(sprites&SPRITE_BANKING)count+=80;
+	if(sprites&SPRITE_INLINE_TWIST)count+=40;
+	if(sprites&SPRITE_SLOPE_BANK_TRANSITION)count+=128;
+	if(sprites&SPRITE_DIAGONAL_BANK_TRANSITION)count+=16;
+	if(sprites&SPRITE_SLOPED_BANK_TRANSITION)count+=16;
+	if(sprites&SPRITE_SLOPED_BANKED_TURN)count+=128;
+	if(sprites&SPRITE_BANKED_SLOPE_TRANSITION)count+=16;
+	if(sprites&SPRITE_CORKSCREW)count+=80;
+	if(flags&VEHICLE_RESTRAINT_ANIMATION)count+=12;
+return count;
+}
+
+
+int project_add_model_to_context(project_t* project,context_t* context,model_t* model,int frame,int mask)
+{
+	for(int i=0;i<model->num_meshes;i++)
+	{
+		if(model->mesh_index[i][frame]==-1)continue;
+	vector3_t orientation=vector3_mult(model->orientation[i][frame],M_PI/180.0);
+	context_add_model(context,project->meshes+model->mesh_index[i][frame],transform(matrix_mult(rotate_y(orientation.x),matrix_mult(rotate_z(orientation.y),rotate_x(orientation.z))),model->position[i][frame]),mask);
+	}
 }
 
 int project_export(project_t* project,context_t* context,const char* output_directory)
@@ -349,7 +377,6 @@ json_object_set_new(json,"id",json_string(project->id));
 //json_object_set_new(json,"originalId",json_string("09F8EB00|#VEKSD  |00000000"));
 json_object_set_new(json,"version",json_string("1.0"));
 //json_object_set_new(json,"sourceGame",json_string("custom"));
-
 json_t* authors=json_array();
 json_array_append_new(authors,json_string("Edward Calver"));
 json_object_set_new(json,"authors",authors);
@@ -361,24 +388,32 @@ json_t* properties=json_object();
 json_t* types=json_array();
 json_array_append_new(types,json_string(project->ride_type));
 json_object_set_new(properties,"type",types);
-json_object_set_new(properties,"category",json_string("rollercoaster"));
-//json_object_set_new(properties,"noInversions",json_false());
-json_object_set_new(properties,"minCarsPerTrain",json_integer(4));
-json_object_set_new(properties,"maxCarsPerTrain",json_integer(7));
-//json_object_set_new(properties,"numEmptyCars",json_integer(0));
-//json_object_set_new(properties,"tabCar",json_integer(0));
+json_object_set_new(properties,"category",json_string(category_names[project->category]));
+json_object_set_new(properties,"minCarsPerTrain",json_integer(project->min_cars_per_train));
+json_object_set_new(properties,"maxCarsPerTrain",json_integer(project->max_cars_per_train));
+json_object_set_new(properties,"numEmptyCars",json_integer(project->zero_cars));
+json_object_set_new(properties,"tabCar",json_integer(project->tab_car));
 json_object_set_new(properties,"defaultCar",json_integer(project->configuration[CAR_INDEX_DEFAULT]));
 	if(project->configuration[CAR_INDEX_FRONT]!=0xFF)json_object_set_new(properties,"headCars",json_integer(project->configuration[CAR_INDEX_FRONT]));//TODO support multiple head cars
 	if(project->configuration[CAR_INDEX_REAR]!=0xFF)json_object_set_new(properties,"headCars",json_integer(project->configuration[CAR_INDEX_REAR]));
-//json_object_set_new(properties,"ratingMultiplier",json_integer(0));
-json_object_set_new(properties,"buildMenuPriority",json_integer(1));
+json_object_set_new(properties,"buildMenuPriority",json_integer(project->build_menu_priority));
+
+
 json_t* car_color_presets=json_array();
-json_t* car_color_preset=json_array();
-json_array_append_new(car_color_preset,json_string("black"));
-json_array_append_new(car_color_preset,json_string("black"));
-json_array_append_new(car_color_preset,json_string("black"));
-json_array_append_new(car_color_presets,car_color_preset);
+	for(int i=0;i<project->num_colors;i++)
+	{
+	json_t* car_color_preset=json_array();
+	json_array_append_new(car_color_preset,json_string(color_names[project->colors[i][0]]));
+	json_array_append_new(car_color_preset,json_string(color_names[project->colors[i][1]]));
+	json_array_append_new(car_color_preset,json_string(color_names[project->colors[i][2]]));
+	json_t* arr=json_array();
+	json_array_append_new(arr,car_color_preset);//Presets are arrays of arrays for some reason?
+	json_array_append_new(car_color_presets,arr);
+	}
 json_object_set_new(properties,"carColours",car_color_presets);
+
+
+
 
 json_t* cars=json_array();
 	for(int i=0;i<project->num_vehicles;i++)
@@ -389,27 +424,41 @@ json_t* cars=json_array();
 	json_object_set_new(car,"mass",json_integer(project->vehicles[i].mass));
 	json_object_set_new(car,"numSeats",json_integer(project->vehicles[i].num_riders));
 	json_object_set_new(car,"numSeatRows",json_integer(project->vehicles[i].num_rider_models));
-	json_object_set_new(car,"frictionSoundId",json_integer(1));
-	json_object_set_new(car,"soundRange",json_integer(1));
+	int friction_sound_ids[]={RUNNING_SOUND_WOODEN_OLD,RUNNING_SOUND_WOODEN_MODERN,RUNNING_SOUND_STEEL,RUNNING_SOUND_STEEL_SMOOTH,RUNNING_SOUND_WATERSLIDE,RUNNING_SOUND_TRAIN,RUNNING_SOUND_ENGINE};
+	json_object_set_new(car,"frictionSoundId",json_integer(friction_sound_ids[project->running_sound]));
+	json_object_set_new(car,"soundRange",json_integer(project->secondary_sound));
 	json_object_set_new(car,"drawOrder",json_integer(project->vehicles[i].draw_order));
 	json_t* frames=json_object();
-		if(project->vehicles[i].sprite_flags&SPRITE_FLAT_SLOPE)json_object_set_new(frames,"flat",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_GENTLE_SLOPE)json_object_set_new(frames,"gentleSlopes",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_STEEP_SLOPE)json_object_set_new(frames,"steepSlopes",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_VERTICAL_SLOPE)json_object_set_new(frames,"verticalSlopes",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_DIAGONAL_SLOPE)json_object_set_new(frames,"diagonalSlopes",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_BANKING)json_object_set_new(frames,"flatBanked",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_INLINE_TWIST)json_object_set_new(frames,"inlineTwists",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_SLOPE_BANK_TRANSITION)json_object_set_new(frames,"flatToGentleSlopeBankedTransitions",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_DIAGONAL_BANK_TRANSITION)json_object_set_new(frames,"diagonalGentleSlopeBankedTransitions",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_SLOPED_BANK_TRANSITION)json_object_set_new(frames,"gentleSlopeBankedTransitions",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_SLOPED_BANKED_TURN)json_object_set_new(frames,"gentleSlopeBankedTurns",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_BANKED_SLOPE_TRANSITION)json_object_set_new(frames,"flatToGentleSlopeWhileBankedTransitions",json_true());
-		if(project->vehicles[i].sprite_flags&SPRITE_CORKSCREW)json_object_set_new(frames,"corkscrews",json_true());
+		if(project->sprite_flags&SPRITE_FLAT_SLOPE)json_object_set_new(frames,"flat",json_true());
+		if(project->sprite_flags&SPRITE_GENTLE_SLOPE)json_object_set_new(frames,"gentleSlopes",json_true());
+		if(project->sprite_flags&SPRITE_STEEP_SLOPE)json_object_set_new(frames,"steepSlopes",json_true());
+		if(project->sprite_flags&SPRITE_VERTICAL_SLOPE)json_object_set_new(frames,"verticalSlopes",json_true());
+		if(project->sprite_flags&SPRITE_DIAGONAL_SLOPE)json_object_set_new(frames,"diagonalSlopes",json_true());
+		if(project->sprite_flags&SPRITE_BANKING)json_object_set_new(frames,"flatBanked",json_true());
+		if(project->sprite_flags&SPRITE_INLINE_TWIST)json_object_set_new(frames,"inlineTwists",json_true());
+		if(project->sprite_flags&SPRITE_SLOPE_BANK_TRANSITION)json_object_set_new(frames,"flatToGentleSlopeBankedTransitions",json_true());
+		if(project->sprite_flags&SPRITE_DIAGONAL_BANK_TRANSITION)json_object_set_new(frames,"diagonalGentleSlopeBankedTransitions",json_true());
+		if(project->sprite_flags&SPRITE_SLOPED_BANK_TRANSITION)json_object_set_new(frames,"gentleSlopeBankedTransitions",json_true());
+		if(project->sprite_flags&SPRITE_SLOPED_BANKED_TURN)json_object_set_new(frames,"gentleSlopeBankedTurns",json_true());
+		if(project->sprite_flags&SPRITE_BANKED_SLOPE_TRANSITION)json_object_set_new(frames,"flatToGentleSlopeWhileBankedTransitions",json_true());
+		if(project->sprite_flags&SPRITE_CORKSCREW)json_object_set_new(frames,"corkscrews",json_true());
+		if(project->vehicles[i].flags&VEHICLE_RESTRAINT_ANIMATION)json_object_set_new(frames,"restraintAnimation",json_true());
 	json_object_set_new(car,"frames",frames);
-	json_object_set_new(car,"VEHICLE_ENTRY_FLAG_ENABLE_ADDITIONAL_COLOUR_1",json_true());
-	json_object_set_new(car,"VEHICLE_ENTRY_FLAG_ENABLE_ADDITIONAL_COLOUR_2",json_true());
-	json_object_set_new(car,"loadingPositions",json_array());
+		if(project->vehicles[i].flags&VEHICLE_SECONDARY_REMAP)json_object_set_new(car,"hasAdditionalColour1",json_true());
+		if(project->vehicles[i].flags&VEHICLE_TERTIARY_REMAP)json_object_set_new(car,"hasAdditionalColour2",json_true());
+		if(project->vehicles[i].flags&VEHICLE_RIDERS_SCREAM)json_object_set_new(car,"hasScreamingRiders",json_true());
+	json_t* loading_positions=json_array();
+		for(int j=0;j<project->vehicles[i].num_rider_models;j++)	
+		{
+		int position=round(32.0*project->vehicles[i].riders[j].position[0][0].x/TILE_SIZE);
+			if(project->vehicles[i].num_riders>1)
+			{
+			json_array_append_new(loading_positions,json_integer(position-1));
+			json_array_append_new(loading_positions,json_integer(position+1));
+			}
+			else json_array_append_new(loading_positions,json_integer(position));
+		}
+	json_object_set_new(car,"loadingPositions",loading_positions);
 	json_array_append_new(cars,car);
 	}
 json_object_set_new(properties,"cars",cars);
@@ -430,60 +479,65 @@ json_object_set_new(json,"strings",strings);
 
 //Render sprites
 json_t* images_json=json_array();
+
+//Write preview image
+FILE* file=fopen("object/images/preview.png","w");
+	if(file)
+	{
+	image_write_png(&(project->preview),file);
+	fclose(file);
+	}
+	else
+	{
+	printf("Failed to write file object/images/preview.png\n");
+	return 1;
+	}	
+//Write preview image JSON
 	for(int i=0;i<3;i++)
 	{
-	char path[256];
-	sprintf(path,"object/images/%d.png",i);
-	image_t image;
-	image_new(&image,1,1,0,0,0);	
-	//Write image file	
-	FILE* file=fopen(path,"w");
-		if(file)
-		{
-		image_write_png(&image,file);
-		fclose(file);
-		}
-		else
-		{
-		printf("Failed to write file %s\n",path);
-		return 1;
-		}	
-	//Write image JSON
-	sprintf(path,"images/%d.png",i);
-	json_array_append_new(images_json,json_image(path,image.x_offset,image.y_offset,-1,-1,-1,-1));
+	json_array_append_new(images_json,json_image("images/preview.png",0,0,-1,-1,-1,-1));
 	}
 
 	for(int i=0;i<project->num_vehicles;i++)
 	{
-	int num_car_images=count_sprites_from_flags(project->vehicles[i].sprite_flags);
+	int num_frames=project->vehicles[i].flags&VEHICLE_RESTRAINT_ANIMATION?4:1;
+	int num_car_images=count_sprites_from_flags(project->sprite_flags,project->vehicles[i].flags);
 	int num_images=num_car_images*(1+project->vehicles[i].num_rider_models);
 	image_t* images=calloc(num_images,sizeof(image_t));
 	
 	//Render vehicle
 	printf("Rendering car sprites\n");
-	context_begin_render(context);
-	context_add_model(context,project->meshes+project->vehicles[i].model.mesh_index,transform(matrix_identity(),project->vehicles[i].model.position),0); 
-	context_finalize_render(context);
-	render_vehicle(context,project,i,images);
-	context_end_render(context);
+	int base=0;
+		for(int frame=0;frame<num_frames;frame++)
+		{
+		context_begin_render(context);
+		project_add_model_to_context(project,context,&(project->vehicles[i].model),frame,0);
+		context_finalize_render(context);
+		base+=render_vehicle(context,project,i,images+base,frame);
+		context_end_render(context);
+		}
 
 		for(int j=0;j<project->vehicles[i].num_rider_models;j++)
 		{
 		printf("Rendering peep sprites %d\n",j);
-		context_begin_render(context);
-		context_add_model(context,project->meshes+project->vehicles[i].model.mesh_index,transform(matrix_identity(),project->vehicles[i].model.position),1);
-			for(int k=0;k<j;k++)context_add_model(context,project->meshes+project->vehicles[i].riders[k].mesh_index,transform(matrix_identity(),project->vehicles[i].riders[k].position),1);
-		context_add_model(context,project->meshes+project->vehicles[i].riders[j].mesh_index,transform(matrix_identity(),project->vehicles[i].riders[j].position),0);
-		context_finalize_render(context);
-		render_vehicle(context,project,i,images+(j+1)*num_car_images);
-		context_end_render(context);
+		base=0;
+			for(int frame=0;frame<num_frames;frame++)
+			{
+			context_begin_render(context);
+			project_add_model_to_context(project,context,&(project->vehicles[i].model),frame,1);
+				for(int k=0;k<j;k++)project_add_model_to_context(project,context,&(project->vehicles[i].riders[k]),frame,1);
+			project_add_model_to_context(project,context,&(project->vehicles[i].riders[j]),frame,0);
+			context_finalize_render(context);
+			base+=render_vehicle(context,project,i,images+(j+1)*num_car_images+base,frame);
+			context_end_render(context);
+			}
 		}
 
 	//Pack images into atlas
 	image_t atlas;
 	int* x_coords=calloc(num_images,sizeof(int));
 	int* y_coords=calloc(num_images,sizeof(int));
-	pack_images(images,num_images,&atlas,x_coords,y_coords);
+	image_create_atlas(&atlas,images,num_images,x_coords,y_coords);
 	//Write image json
 	char path[256];
 	sprintf(path,"images/car_%d.png",i);
@@ -518,9 +572,9 @@ json_dump_file(json,"object/object.json",JSON_INDENT(4));
 char zip_cmd[256];
 sprintf(zip_cmd,"cd object&&zip %s%s.parkobj object.json images/*.png",output_directory,project->id);
 
+printf("Command %s\n",zip_cmd);
 system(zip_cmd);//Will fail if id contains special characters
 
-/*
 //Delete temporary files
 struct dirent* dent;
 DIR* dir=opendir("object/images");
@@ -540,6 +594,68 @@ closedir(dir);
 remove("object/images");
 remove("object/object.json");
 remove("object");
-*/
+return 0;
+}
+
+
+
+int project_export_test(project_t* project,context_t* context)
+{
+//Create working directory
+	if(mkdir("test", 0700)==-1)
+	{
+//	printf("Failed to create working directory: %s\n",strerror(errno));
+//	return 1;
+	}
+
+
+FILE* file=fopen("test/preview.png","w");
+	if(file)
+	{
+	image_write_png(&(project->preview),file);
+	fclose(file);
+	}
+	else
+	{
+	printf("Failed to write file test/preview.png\n");
+	return 1;
+	}	
+
+
+	for(int i=0;i<project->num_vehicles;i++)
+	{
+	int num_frames=project->vehicles[i].flags&VEHICLE_RESTRAINT_ANIMATION?4:1;
+		for(int j=0;j<num_frames;j++)
+		{
+		int num_car_images=count_sprites_from_flags(project->sprite_flags,project->vehicles[i].flags);
+		int num_images=num_car_images*(1+project->vehicles[i].num_rider_models);
+		image_t image;
+		//Render vehicle
+		context_begin_render(context);
+		project_add_model_to_context(project,context,&(project->vehicles[i].model),j,0);
+			for(int k=0;k<project->vehicles[i].num_rider_models;k++)
+			{
+			project_add_model_to_context(project,context,&(project->vehicles[i].riders[k]),j,0);
+			}
+		context_finalize_render(context);
+		context_render_view(context,rotate_y(M_PI),&image);
+		context_end_render(context);
+		//Write image file
+		char path[256];	
+		sprintf(path,"test/car_%d_%d.png",i,j);
+		FILE* file=fopen(path,"w");
+			if(file)
+			{
+			image_write_png(&image,file);
+			fclose(file);
+			}
+			else
+			{
+			printf("Failed to write file %s\n",path);
+			exit(1);
+			}
+		image_destroy(&image);	
+		}
+	}
 return 0;
 }
