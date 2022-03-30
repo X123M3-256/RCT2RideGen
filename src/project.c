@@ -30,7 +30,7 @@
 #define FG_TRANSITION_DIAGONAL ((FLAT + GENTLE_DIAGONAL) / 2)
 
 #define BANK M_PI_4
-#define BANK_TRANSITION (M_PI_4 / 2)
+#define BANK_TRANSITION (BANK / 2)
 
 #define CORKSCREW_RIGHT_YAW(angle) \
     (atan2(0.5 * (1 - cos(angle)), 1 - 0.5 * (1 - cos(angle))))
