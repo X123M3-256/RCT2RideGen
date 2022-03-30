@@ -43,6 +43,7 @@
 
 
 const char* sprite_group_names[NUM_SPRITE_GROUPS]={"flat","gentle_slopes","steep_slopes","vertical_slopes","diagonals","banked_turns","inline_twists","slope_bank_transition","diagonal_bank_transition","sloped_bank_transition","banked_sloped_turns","banked_slope_transition","corkscrews"};
+const char* flag_names[NUM_FLAGS]={"no_collision_crashes","rider_controls_speed"};
 const char* vehicle_flag_names[NUM_VEHICLE_FLAGS]={"secondary_remap","tertiary_remap","riders_scream","restraint_animation"};
 const char* running_sounds[NUM_RUNNING_SOUNDS]={"wooden_old","wooden","steel","steel_smooth","train","engine"};
 const char* secondary_sounds[NUM_SECONDARY_SOUNDS]={"scream1","scream2","scream3","bell"};
@@ -399,6 +400,10 @@ json_object_set_new(properties,"defaultCar",json_integer(project->configuration[
 json_object_set_new(properties,"buildMenuPriority",json_integer(project->build_menu_priority));
 
 
+		if(project->flags&RIDE_NO_COLLISION_CRASHES)json_object_set_new(properties,"noCollisionCrashes",json_true());
+		if(project->flags&RIDE_RIDER_CONTROLS_SPEED)json_object_set_new(properties,"riderControlsSpeed",json_true());
+
+//Color presets
 json_t* car_color_presets=json_array();
 	for(int i=0;i<project->num_colors;i++)
 	{

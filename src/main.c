@@ -438,6 +438,10 @@ json_t* ride_type=json_object_get(json,"ride_type");
 	return 1;
 	}
 
+json_t* flags=json_object_get(json,"flags");
+project->flags=0;
+	if(flags&&load_flags(&(project->flags),flags,flag_names,NUM_FLAGS,"flags","flag"))return 1;
+
 	if(load_flags(&(project->sprite_flags),json_object_get(json,"sprites"),sprite_group_names,NUM_SPRITE_GROUPS,"sprites","sprite group"))return 1;
 		if(project->sprite_flags&SPRITE_BANKING)
 		{

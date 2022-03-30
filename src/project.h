@@ -33,6 +33,12 @@ SPRITE_SPIRAL_LIFT=0x4000
 
 enum
 {
+RIDE_NO_COLLISION_CRASHES=1,
+RIDE_RIDER_CONTROLS_SPEED=2
+};
+
+enum
+{
 VEHICLE_SECONDARY_REMAP=1,
 VEHICLE_TERTIARY_REMAP=2,
 VEHICLE_RIDERS_SCREAM=4,
@@ -110,6 +116,7 @@ uint8_t* description;
 uint8_t* capacity;
 uint8_t* ride_type;
 uint8_t configuration[5];
+uint32_t flags;
 uint32_t zero_cars;
 uint32_t min_cars_per_train;
 uint32_t max_cars_per_train;
@@ -140,6 +147,7 @@ int project_export_test(project_t* project,context_t* context);
 
 
 #define NUM_SPRITE_GROUPS 13
+#define NUM_FLAGS 2
 #define NUM_VEHICLE_FLAGS 4
 #define NUM_RUNNING_SOUNDS 6
 #define NUM_SECONDARY_SOUNDS 4
@@ -147,6 +155,7 @@ int project_export_test(project_t* project,context_t* context);
 #define NUM_CATEGORIES 4
 
 extern const char* sprite_group_names[NUM_SPRITE_GROUPS];
+extern const char* flag_names[NUM_FLAGS];
 extern const char* vehicle_flag_names[NUM_VEHICLE_FLAGS];
 extern const char* running_sounds[NUM_RUNNING_SOUNDS];
 extern const char* secondary_sounds[NUM_SECONDARY_SOUNDS];
