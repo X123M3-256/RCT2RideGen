@@ -220,13 +220,13 @@ int base=0;
         if (sprite_flags & SPRITE_DIAGONAL_BANK_TRANSITION)
 	{
 	printf("Rendering diagonal slope-bank transition sprites\n");
-	render_rotation(context,4,GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4,images+base);
+	render_rotation(context,4,FG_TRANSITION_DIAGONAL,BANK_TRANSITION,M_PI_4,images+base);
 	base+=4;
-	render_rotation(context,4,GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4,images+base);
+	render_rotation(context,4,FG_TRANSITION_DIAGONAL,-BANK_TRANSITION,M_PI_4,images+base);
 	base+=4;
-	render_rotation(context,4,-GENTLE_DIAGONAL,BANK_TRANSITION,M_PI_4,images+base);
+	render_rotation(context,4,-FG_TRANSITION_DIAGONAL,BANK_TRANSITION,M_PI_4,images+base);
 	base+=4;
-	render_rotation(context,4,-GENTLE_DIAGONAL,-BANK_TRANSITION,M_PI_4,images+base);
+	render_rotation(context,4,-FG_TRANSITION_DIAGONAL,-BANK_TRANSITION,M_PI_4,images+base);
 	base+=4;
         }
         if (sprite_flags & SPRITE_SLOPED_BANK_TRANSITION)
