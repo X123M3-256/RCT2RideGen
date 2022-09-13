@@ -28,7 +28,7 @@ SPRITE_SLOPED_BANK_TRANSITION=0x0200,
 SPRITE_SLOPED_BANKED_TURN=0x0400,
 SPRITE_BANKED_SLOPE_TRANSITION=0x0800,
 SPRITE_CORKSCREW=0x1000,
-SPRITE_SPIRAL_LIFT=0x4000
+SPRITE_ZERO_G_ROLL=0x2000
 };
 
 enum
@@ -146,7 +146,7 @@ int project_export(project_t* project,context_t* context,const char* output_dire
 int project_export_test(project_t* project,context_t* context);
 
 
-#define NUM_SPRITE_GROUPS 13
+#define NUM_SPRITE_GROUPS 14
 #define NUM_FLAGS 2
 #define NUM_VEHICLE_FLAGS 4
 #define NUM_RUNNING_SOUNDS 6
