@@ -8,7 +8,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <jansson.h>
-//#include <zip.h>
 #include <image.h>
 #include "project.h"
 
@@ -479,9 +478,7 @@ int project_export(project_t* project,context_t* context,const char* output_dire
 //Create JSON file
 json_t* json=json_object();
 json_object_set_new(json,"id",json_string(project->id));
-//json_object_set_new(json,"originalId",json_string("09F8EB00|#VEKSD  |00000000"));
 json_object_set_new(json,"version",json_string("1.0"));
-//json_object_set_new(json,"sourceGame",json_string("custom"));
 json_t* authors=json_array();
 json_array_append_new(authors,json_string("Edward Calver"));
 json_object_set_new(json,"authors",authors);
@@ -520,8 +517,6 @@ json_t* car_color_presets=json_array();
 	json_array_append_new(car_color_presets,arr);
 	}
 json_object_set_new(properties,"carColours",car_color_presets);
-
-
 
 
 json_t* cars=json_array();
@@ -764,8 +759,6 @@ remove("object/object.json");
 remove("object");
 return 0;
 }
-
-
 
 int project_export_test(project_t* project,context_t* context)
 {
