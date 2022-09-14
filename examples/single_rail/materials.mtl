@@ -1,0 +1,150 @@
+
+newmtl Remap1_Edge
+Ns 8
+Kd 0.330000 0.000000 0.000000
+Ks 0.275000 0.2750000 0.2750000
+
+newmtl Remap1_NoBleed_NoAO
+Ns 8
+Kd 0.330000 0.000000 0.000000
+Ks 0.275000 0.2750000 0.2750000
+
+newmtl Remap2_Edge
+Ns 8
+Kd 0.330000 0.000000 0.000000
+Ks 0.275000 0.2750000 0.2750000
+
+newmtl Remap2_NoBleed_NoAO
+Ns 8
+Kd 0.330000 0.000000 0.000000
+Ks 0.275000 0.2750000 0.2750000
+
+newmtl Remap1_Chain
+Ns 2
+Kd 0.050000 0.050000 0.050000
+Ks 0.000000 0.000000 0.000000
+
+newmtl Brake_Greyscale
+Ns 5
+Kd 0.005000 0.005000 0.005000
+Ks 0.000000 0.000000 0.000000
+
+newmtl BrakeTop_Greyscale
+Ns 5
+Kd 0.060000 0.060000 0.060000
+Ks 0.000000 0.000000 0.000000
+
+newmtl BrakeSide_Greyscale
+Ns 5
+Kd 0.000000 0.000000 0.000000
+Ks 0.000000 0.000000 0.000000
+
+newmtl Brake_Remap1
+Ns 5
+Kd 0.100000 0.100000 0.100000
+Ks 0.000000 0.000000 0.000000
+
+newmtl VisibleMask
+Ns 8
+Kd 0.50000 0.500000 0.500000
+Ks 0.275000 0.2750000 0.2750000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+newmtl Remap1
+Ns 4
+Kd 0.000000 0.300000 0.000000
+Ks 1.000000 1.000000 1.000000
+map_Kd textures/remap_texture.png
+
+newmtl Remap2
+Ns 4
+Kd 0.350000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+map_Kd textures/remap_texture.png
+
+newmtl Remap3_Edge
+Ns 5
+Kd 0.300000 0.300000 0.000000
+Ks 0.800000 0.800000 0.800000
+map_Kd textures/remap_texture_very_light.png
+
+newmtl Harness 
+Ns 5
+Kd 0.0300000 0.030000 0.030000
+Ks 0.050000 0.050000 0.050000
+
+newmtl Chassis_Greyscale
+Ns 3
+Kd 0.500000 0.500000 0.500000
+Ks 0.100000 0.100000 0.100000
+map_Kd textures/chassis_texture.png
+
+newmtl Seat
+Ns 5
+Kd 0.070000 0.070000 0.070000
+Ks 0.500000 0.500000 0.500000
+map_Kd textures/seat_texture_dark.png
+
+newmtl Metal
+Ns 5
+Kd 0.300000 0.300000 0.000000
+Ks 0.800000 0.800000 0.800000
+map_Kd textures/metal_texture.png
+
+newmtl ShinyMetal_Edge
+Ns 8
+Kd 0.300000 0.300000 0.000000
+Ks 1.000000 1.000000 1.000000
+map_Kd textures/shiny_metal_texture.png
+
+newmtl Wheel
+Ns 5
+Kd 0.600000 0.600000 0.600000
+Ks 0.500000 0.500000 0.500000
+
+
+
+
+newmtl Peep_Skin
+Ns 5
+Kd 0.950000 0.35 0.2
+Ks 1.000000 1.000000 1.000000
+
+newmtl Peep_Hair_Edge
+Ns 5
+Kd 0.08 0.035 0.005
+Ks 0.000000 0.000000 0.000000
+
+newmtl Peep_Eye_Edge
+Ns 5
+Kd 0.000000 0.000000 0.000000
+Ks 0.000000 0.000000 0.000000
+
+newmtl Peep_Remap1_Edge
+Ns 8
+Kd 0.220000 0.000000 0.000000
+Ks 1.000000 1.000000 0.000000
+
+
+newmtl Peep_Remap2_Edge
+Ns 8
+Kd 0.220000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+
+newmtl Peep_Shoe
+Ns 10
+Kd 0.05 0.05 0.05
+Ks 0.05 0.05 0.05
+
