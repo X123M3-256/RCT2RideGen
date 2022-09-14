@@ -114,6 +114,8 @@ uint8_t* id;
 uint8_t* name;
 uint8_t* description;
 uint8_t* capacity;
+uint8_t* author;
+uint8_t* version;
 uint8_t* ride_type;
 uint8_t configuration[5];
 uint32_t flags;

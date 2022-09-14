@@ -478,9 +478,9 @@ int project_export(project_t* project,context_t* context,const char* output_dire
 //Create JSON file
 json_t* json=json_object();
 json_object_set_new(json,"id",json_string(project->id));
-json_object_set_new(json,"version",json_string("1.0"));
+json_object_set_new(json,"version",json_string(project->version));
 json_t* authors=json_array();
-json_array_append_new(authors,json_string("Edward Calver"));
+	if(project->author!=NULL)json_array_append_new(authors,json_string(project->author));
 json_object_set_new(json,"authors",authors);
 
 json_object_set_new(json,"objectType",json_string("ride"));
@@ -733,7 +733,7 @@ json_dump_file(json,"object/object.json",JSON_INDENT(4));
 
 //Make zip file
 char zip_cmd[256];
-sprintf(zip_cmd,"cd object&&zip %s%s.parkobj object.json images/*.png",output_directory,project->id);
+sprintf(zip_cmd,"zip %s/%s.parkobj object/object.json object/images/*.png",output_directory,project->id);
 
 printf("Command %s\n",zip_cmd);
 system(zip_cmd);//Will fail if id contains special characters

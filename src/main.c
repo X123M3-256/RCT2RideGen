@@ -185,60 +185,6 @@ model->num_meshes=json_array_size(arr);
 json_decref(arr);
 return 0;
 }
-/*
-int load_lights(light_t** lights_array,int* lights_count,json_t* json)
-{
-int num_lights=json_array_size(json);
-light_t* lights=calloc(num_lights,sizeof(light_t));
-	for(int i=0;i<num_lights;i++)
-	{
-	json_t* light=json_array_get(json,i);
-	assert(light!=NULL);
-		if(!json_is_object(light))
-		{
-		printf("Warning: Light array contains an element which is not an object - ignoring\n");
-		continue;
-		}
-	
-	json_t* type=json_object_get(light,"type");
-		if(type==NULL||!json_is_string(type))
-		{
-		printf("Error: Property \"type\" not found or is not a string\n");
-		return 1;
-		}
-	const char* type_value=json_string_value(type);
-		if(strcmp(type_value,"diffuse")==0)lights[i].type=LIGHT_DIFFUSE;
-		else if(strcmp(type_value,"specular")==0)lights[i].type=LIGHT_SPECULAR;
-		else
-		{
-		printf("Unrecognized light type \"%s\"\n",type);
-		free(lights);
-		}
-	json_t* shadow=json_object_get(light,"shadow");
-		if(shadow==NULL||!json_is_boolean(shadow))
-		{
-		printf("Error: Property \"shadow\" not found or is not a boolean\n");
-		return 1;
-		}
-		if(json_boolean_value(shadow)==JSON_TRUE)lights[i].shadow=1;
-		else lights[i].shadow=0;
-
-		if(load_vector(&(lights[i].direction),light,"direction"))return 1;
-	lights[i].direction=vector3_normalize(lights[i].direction);
-	
-	json_t* strength=json_object_get(light,"strength");
-		if(strength==NULL||!json_is_number(strength))
-		{
-		printf("Error: Property \"strength\" not found or is not a number\n");
-		return 1;
-		}
-	lights[i].intensity=json_number_value(strength);
-	}
-*lights_count=num_lights;
-*lights_array=lights;
-return 0;
-}
-*/
 
 int load_configuration(uint8_t* configuration,json_t* json)
 {
@@ -372,6 +318,65 @@ project->num_colors=json_array_size(json);
 return 0;
 }
 
+int load_lights(light_t* lights,int* lights_count,json_t* json)
+{
+int num_lights=json_array_size(json);
+	for(int i=0;i<num_lights;i++)
+	{
+	json_t* light=json_array_get(json,i);
+	assert(light!=NULL);
+		if(!json_is_object(light))
+		{
+		printf("Warning: Light array contains an element which is not an object - ignoring\n");
+		continue;
+		}
+	
+	json_t* type=json_object_get(light,"type");
+		if(type==NULL||!json_is_string(type))
+		{
+		printf("Error: Property \"type\" not found or is not a string\n");
+		return 1;
+		}
+	
+	const char* type_value=json_string_value(type);
+		if(strcmp(type_value,"diffuse")==0)lights[i].type=LIGHT_DIFFUSE;
+		else if(strcmp(type_value,"specular")==0)lights[i].type=LIGHT_SPECULAR;
+		else
+		{
+		printf("Unrecognized light type \"%s\"\n",type);
+		free(lights);
+		}
+
+	json_t* shadow=json_object_get(light,"shadow");
+		if(shadow==NULL||!json_is_boolean(shadow))
+		{
+		printf("Error: Property \"shadow\" not found or is not a boolean\n");
+		return 1;
+		}
+		if(json_boolean_value(shadow)==JSON_TRUE)lights[i].shadow=1;
+		else lights[i].shadow=0;
+
+	json_t* direction=json_object_get(light,"direction");
+		if(direction==NULL||!json_is_array(direction))
+		{
+		printf("Error: Property \"direction\" not found or is not a direction\n");
+		return 1;
+		}
+		if(load_vector(&(lights[i].direction),direction))return 1;
+	lights[i].direction=vector3_normalize(lights[i].direction);
+	
+	json_t* strength=json_object_get(light,"strength");
+		if(strength==NULL||!json_is_number(strength))
+		{
+		printf("Error: Property \"strength\" not found or is not a number\n");
+		return 1;
+		}
+	lights[i].intensity=json_number_value(strength);
+	}
+*lights_count=num_lights;
+return 0;
+}
+
 
 int load_project(project_t* project,json_t* json)
 {
@@ -406,6 +411,31 @@ json_t* capacity=json_object_get(json,"capacity");
 	return 1;
 	}
 project->capacity=(uint8_t*)strdup(json_string_value(capacity));
+
+project->author=NULL;
+json_t* author_json=json_object_get(json,"author");
+	if(author_json!=NULL)
+	{
+		if(!json_is_string(author_json))
+		{
+		printf("Error: Property \"author\" is not a string\n");
+		return 1;
+		}
+		else project->author=(uint8_t*)strdup(json_string_value(author_json));
+	}
+
+project->version="1.0";
+json_t* version_json=json_object_get(json,"version");
+	if(version_json!=NULL)
+	{
+		if(!json_is_string(version_json))
+		{
+		printf("Error: Property \"version\" is not a string\n");
+		return 1;
+		}
+		else project->version=(uint8_t*)strdup(json_string_value(version_json));
+	}
+
 
 json_t* preview=json_object_get(json,"preview");
 	if(preview==NULL)
@@ -580,41 +610,54 @@ json_t* project_json=json_load_file(filename,0,&error);
 	return 1;
 	}
 
-json_t* output_directory=json_object_get(project_json,"output_directory");
-	if(output_directory==NULL||!json_is_string(output_directory))
+const char* output_directory=".";
+json_t* output_directory_json=json_object_get(project_json,"output_directory");
+	if(output_directory_json!=NULL)
 	{
-	printf("Error: Property \"output_directory\" not found or is not a string\n");
-	return 1;
+		if(!json_is_string(output_directory_json))
+		{
+		printf("Error: Property \"output_directory\" is not a string\n");
+		return 1;
+		}
+		else output_directory=json_string_value(output_directory_json);
+	
 	}
-
-//light_t* lights;
-//int num_lights;
-json_t* light_array=json_object_get(project_json,"lights");
-	if(light_array==NULL||!json_is_array(light_array))
-	{
-	printf("Error: Property \"lights\" not found or is not an array\n");
-	return 1;
-	}
-
-//	if(load_lights(&lights,&num_lights,light_array))return 1;
-	if(load_project(&project,project_json))return 1;
-
-context_t context;
-
 
 int num_lights=9;
-light_t lights[9]={
+
+light_t lights[16]={
 {LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.0,-1.0,0.0)),0.1},//Bottom
 {LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.0,0.5,-1.0)),0.8},//Front right
-{LIGHT_SPECULAR,0,vector3_normalize(vector3(1,1.65,-1)),0.5},//Main spec
-{LIGHT_DIFFUSE,0,vector3_normalize(vector3(1,1.7,-1)),0.8},//Main diffuse
+{LIGHT_SPECULAR,1,vector3_normalize(vector3(1,1.65,-1)),0.5},//Main spec
+{LIGHT_DIFFUSE,1,vector3_normalize(vector3(1,1.7,-1)),0.8},//Main diffuse
 {LIGHT_DIFFUSE,0,vector3(0.0,1.0,0.0),0.45},//Top
 {LIGHT_DIFFUSE,0,vector3_normalize(vector3(-1.0,0.85,1.0)),0.475},//Front left
 {LIGHT_DIFFUSE,0,vector3_normalize(vector3(0.75,0.4,-1.0)),0.6},//Top right
 {LIGHT_DIFFUSE,0,vector3_normalize(vector3(1,0.25,0)),0.5},//Back left
 {LIGHT_DIFFUSE,0,vector3_normalize(vector3(-1.0,-0.5,0)),0.1},//Back left
+{0,0,{0,0,0},0},
+{0,0,{0,0,0},0},
+{0,0,{0,0,0},0},
+{0,0,{0,0,0},0},
+{0,0,{0,0,0},0},
+{0,0,{0,0,0},0},
+{0,0,{0,0,0},0}
 };
 
+json_t* light_array=json_object_get(project_json,"lights");
+	if(light_array!=NULL)
+	{
+		if(!json_is_array(light_array))
+		{
+		printf("Error: Property \"lights\" is not an array\n");
+		return 1;
+		}
+	if(load_lights(lights,&num_lights,light_array))return 1;
+	}
+
+	if(load_project(&project,project_json))return 1;
+
+context_t context;
 context_init(&context,lights,num_lights,palette_rct2(),test_mode?0.125*TILE_SIZE:TILE_SIZE);
 	if(test_mode)
 	{
@@ -623,7 +666,7 @@ context_init(&context,lights,num_lights,palette_rct2(),test_mode?0.125*TILE_SIZE
 	}
 	else
 	{
-		if(project_export(&project,&context,json_string_value(output_directory)))return 1;
+		if(project_export(&project,&context,output_directory))return 1;
 	}
 context_destroy(&context);
 return 0;
