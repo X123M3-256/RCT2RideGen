@@ -11,6 +11,8 @@
 #include <image.h>
 #include "project.h"
 
+void print_msg(const char* fmt,...);
+
 #define M_PI_8 (M_PI/8.0)
 #define M_PI_12 (M_PI/12.0)
 
@@ -81,7 +83,7 @@ int render_vehicle(context_t* context,project_t* project,int i,image_t* images,i
 //Currently only restraint animations are supported
 	if(frame>0)
 	{
-	printf("Rendering restraint animation\n");
+	print_msg("Rendering restraint animation");
         render_rotation(context,4,FLAT,0,0,images);
 	return 4;
 	}
@@ -91,13 +93,13 @@ int sprite_flags=project->sprite_flags;
 int base=0;
 	if(sprite_flags&SPRITE_FLAT_SLOPE)
 	{
-	printf("Rendering flat sprites\n");
+	print_msg("Rendering flat sprites");
         render_rotation(context,32,FLAT,0,0,images+base);
 	base+=32;
         }
 	if(sprite_flags&SPRITE_GENTLE_SLOPE)
 	{
-	printf("Rendering gentle sprites\n");
+	print_msg("Rendering gentle sprites");
 	render_rotation(context,4,FG_TRANSITION,0,0,images+base);
 	base+=4;
 	render_rotation(context,4,-FG_TRANSITION,0,0,images+base);
@@ -109,7 +111,7 @@ int base=0;
 	}
 	if(sprite_flags&SPRITE_STEEP_SLOPE)
 	{
-	printf("Rendering steep sprites\n");
+	print_msg("Rendering steep sprites");
 	render_rotation(context,8,GS_TRANSITION,0,0,images+base);
 	base+=8;
 	render_rotation(context,8,-GS_TRANSITION,0,0,images+base);
@@ -121,7 +123,7 @@ int base=0;
 	}
 	if(sprite_flags&SPRITE_VERTICAL_SLOPE)
 	{
-	printf("Rendering vertical sprites\n");
+	print_msg("Rendering vertical sprites");
 	render_rotation(context,4,SV_TRANSITION,0,0,images+base);
 	base+=4;
 	render_rotation(context,4,-SV_TRANSITION,0,0,images+base);
@@ -155,7 +157,7 @@ int base=0;
 	}
 	if(sprite_flags&SPRITE_DIAGONAL_SLOPE)
 	{
-	printf("Rendering diagonal sprites\n");
+	print_msg("Rendering diagonal sprites");
 	render_rotation(context,4,FG_TRANSITION_DIAGONAL,0,M_PI_4,images+base);
 	base+=4;
 	render_rotation(context,4,-FG_TRANSITION_DIAGONAL,0,M_PI_4,images+base);
@@ -171,7 +173,7 @@ int base=0;
 	}
         if (sprite_flags & SPRITE_BANKING)
 	{
-	printf("Rendering banked sprites\n");
+	print_msg("Rendering banked sprites");
 	render_rotation(context,8,FLAT,BANK_TRANSITION,0,images+base);
 	base+=8;
 	render_rotation(context,8,FLAT,-BANK_TRANSITION,0,images+base);
@@ -183,7 +185,7 @@ int base=0;
         }
         if (sprite_flags & SPRITE_INLINE_TWIST)
 	{
-	printf("Rendering inline twist sprites\n");
+	print_msg("Rendering inline twist sprites");
 	render_rotation(context,4,FLAT,3.0 * M_PI_8,0,images+base);
 	base+=4;
 	render_rotation(context,4,FLAT,-3.0 * M_PI_8,0,images+base);
@@ -207,7 +209,7 @@ int base=0;
         }
         if (sprite_flags & SPRITE_SLOPE_BANK_TRANSITION)
 	{
-	printf("Rendering slope-bank transition sprites\n");
+	print_msg("Rendering slope-bank transition sprites");
 	render_rotation(context,32,FG_TRANSITION,BANK_TRANSITION,0,images+base);
 	base+=32;
 	render_rotation(context,32,FG_TRANSITION,-BANK_TRANSITION,0,images+base);
@@ -219,7 +221,7 @@ int base=0;
         }
         if (sprite_flags & SPRITE_DIAGONAL_BANK_TRANSITION)
 	{
-	printf("Rendering diagonal slope-bank transition sprites\n");
+	print_msg("Rendering diagonal slope-bank transition sprites");
 	render_rotation(context,4,FG_TRANSITION_DIAGONAL,BANK_TRANSITION,M_PI_4,images+base);
 	base+=4;
 	render_rotation(context,4,FG_TRANSITION_DIAGONAL,-BANK_TRANSITION,M_PI_4,images+base);
@@ -231,7 +233,7 @@ int base=0;
         }
         if (sprite_flags & SPRITE_SLOPED_BANK_TRANSITION)
 	{
-	printf("Rendering diagonal sloped bank transition sprites\n");
+	print_msg("Rendering diagonal sloped bank transition sprites");
 	render_rotation(context,4,GENTLE,BANK_TRANSITION,0,images+base);
 	base+=4;
 	render_rotation(context,4,GENTLE,-BANK_TRANSITION,0,images+base);
@@ -243,7 +245,7 @@ int base=0;
         }
         if (sprite_flags & SPRITE_SLOPED_BANKED_TURN)
 	{
-	printf("Rendering sloped banked sprites\n");
+	print_msg("Rendering sloped banked sprites");
 	render_rotation(context,32,GENTLE,BANK,0,images+base);
 	base+=32;
 	render_rotation(context,32,GENTLE,-BANK,0,images+base);
@@ -255,7 +257,7 @@ int base=0;
         }
         if (sprite_flags & SPRITE_BANKED_SLOPE_TRANSITION)
 	{
-	printf("Rendering banked slope transition sprites\n");
+	print_msg("Rendering banked slope transition sprites");
 	render_rotation(context,4,FG_TRANSITION,BANK,0,images+base);
 	base+=4;
 	render_rotation(context,4,FG_TRANSITION,-BANK,0,images+base);
@@ -267,7 +269,7 @@ int base=0;
         }
         if (sprite_flags & SPRITE_ZERO_G_ROLL)
 	{
-	printf("Rendering zero G roll sprites\n");
+	print_msg("Rendering zero G roll sprites");
 	//Gentle bank 67.5
 	render_rotation(context,4,GENTLE,3.0 * M_PI_8,0,images+base);
 	base+=4;
@@ -369,7 +371,7 @@ int base=0;
 	}
         if (sprite_flags & SPRITE_CORKSCREW)
 	{
-	printf("Rendering corkscrew sprites\n");
+	print_msg("Rendering corkscrew sprites");
 	#define CORKSCREW_ANGLE_1 2.0 * M_PI_12
 	#define CORKSCREW_ANGLE_2 4.0 * M_PI_12
 	#define CORKSCREW_ANGLE_3 M_PI_2
@@ -450,7 +452,7 @@ return count;
 }
 
 
-int project_add_model_to_context(project_t* project,context_t* context,model_t* model,int frame,int mask)
+void project_add_model_to_context(project_t* project,context_t* context,model_t* model,int frame,int mask)
 {
 	for(int i=0;i<model->num_meshes;i++)
 	{
@@ -462,25 +464,12 @@ int project_add_model_to_context(project_t* project,context_t* context,model_t* 
 
 int project_export(project_t* project,context_t* context,const char* output_directory)
 {
-//Create working directory
-	if(mkdir("object", 0700)==-1)
-	{
-//	printf("Failed to create working directory: %s\n",strerror(errno));
-//	return 1;
-	}
-//Create image directory
-	if(!mkdir("object/images", 0700)==-1)
-	{
-//	printf("Failed to create image directory: %s\n",strerror(errno));
-//	return 1;
-	}
-
 //Create JSON file
 json_t* json=json_object();
-json_object_set_new(json,"id",json_string(project->id));
-json_object_set_new(json,"version",json_string(project->version));
+json_object_set_new(json,"id",json_string((char*)project->id));
+json_object_set_new(json,"version",json_string((char*)project->version));
 json_t* authors=json_array();
-	if(project->author!=NULL)json_array_append_new(authors,json_string(project->author));
+	if(project->author!=NULL)json_array_append_new(authors,json_string((char*)project->author));
 json_object_set_new(json,"authors",authors);
 
 json_object_set_new(json,"objectType",json_string("ride"));
@@ -488,7 +477,7 @@ json_object_set_new(json,"objectType",json_string("ride"));
 //Ride header
 json_t* properties=json_object();
 json_t* types=json_array();
-json_array_append_new(types,json_string(project->ride_type));
+json_array_append_new(types,json_string((char*)project->ride_type));
 json_object_set_new(properties,"type",types);
 json_object_set_new(properties,"category",json_string(category_names[project->category]));
 json_object_set_new(properties,"minCarsPerTrain",json_integer(project->min_cars_per_train));
@@ -630,13 +619,13 @@ json_object_set_new(json,"properties",properties);
 //String tables
 json_t* strings=json_object();
 json_t* name=json_object();
-json_object_set_new(name,"en-GB",json_string(project->name));
+json_object_set_new(name,"en-GB",json_string((char*)project->name));
 json_object_set_new(strings,"name",name);
 json_t* description=json_object();
-json_object_set_new(description,"en-GB",json_string(project->description));
+json_object_set_new(description,"en-GB",json_string((char*)project->description));
 json_object_set_new(strings,"description",description);
 json_t* capacity=json_object();
-json_object_set_new(capacity,"en-GB",json_string(project->capacity));
+json_object_set_new(capacity,"en-GB",json_string((char*)project->capacity));
 json_object_set_new(strings,"capacity",capacity);
 json_object_set_new(json,"strings",strings);
 
@@ -644,7 +633,7 @@ json_object_set_new(json,"strings",strings);
 json_t* images_json=json_array();
 
 //Write preview image
-FILE* file=fopen("object/images/preview.png","w");
+FILE* file=fopen("object/images/preview.png","wb");
 	if(file)
 	{
 	image_write_png(&(project->preview),file);
@@ -652,7 +641,7 @@ FILE* file=fopen("object/images/preview.png","w");
 	}
 	else
 	{
-	printf("Failed to write file object/images/preview.png\n");
+	print_msg("Failed to write file object/images/preview.png");
 	return 1;
 	}	
 //Write preview image JSON
@@ -669,7 +658,7 @@ FILE* file=fopen("object/images/preview.png","w");
 	image_t* images=calloc(num_images,sizeof(image_t));
 	
 	//Render vehicle
-	printf("Rendering car sprites\n");
+	print_msg("Rendering car sprites");
 	int base=0;
 		for(int frame=0;frame<num_frames;frame++)
 		{
@@ -682,7 +671,7 @@ FILE* file=fopen("object/images/preview.png","w");
 
 		for(int j=0;j<project->vehicles[i].num_rider_models;j++)
 		{
-		printf("Rendering peep sprites %d\n",j);
+		print_msg("Rendering peep sprites %d",j);
 		base=0;
 			for(int frame=0;frame<num_frames;frame++)
 			{
@@ -710,7 +699,7 @@ FILE* file=fopen("object/images/preview.png","w");
 		}
 	//Write image file	
 	sprintf(path,"object/images/car_%d.png",i);
-	FILE* file=fopen(path,"w");
+	FILE* file=fopen(path,"wb");
 		if(file)
 		{
 		image_write_png(&atlas,file);
@@ -718,7 +707,7 @@ FILE* file=fopen("object/images/preview.png","w");
 		}
 		else
 		{
-		printf("Failed to write file %s\n",path);
+		print_msg("Failed to write file %s",path);
 		exit(1);
 		}
 		for(int i=0;i<num_images;i++)image_destroy(images+i);	
@@ -730,47 +719,12 @@ json_object_set_new(json,"images",images_json);
 
 json_dump_file(json,"object/object.json",JSON_INDENT(4));
 
-
-//Make zip file
-char zip_cmd[256];
-sprintf(zip_cmd,"zip %s/%s.parkobj object/object.json object/images/*.png",output_directory,project->id);
-
-printf("Command %s\n",zip_cmd);
-system(zip_cmd);//Will fail if id contains special characters
-
-//Delete temporary files
-struct dirent* dent;
-DIR* dir=opendir("object/images");
-	if(dir!=NULL)
-	{
-		while((dent=readdir(dir))!=NULL)
-		{
-			if(dent->d_type==8)
-			{
-			char path[256];
-			sprintf(path,"object/images/%s",dent->d_name);
-			remove(path);
-			}
-		}
-	}
-closedir(dir);
-remove("object/images");
-remove("object/object.json");
-remove("object");
 return 0;
 }
 
 int project_export_test(project_t* project,context_t* context)
 {
-//Create working directory
-	if(mkdir("test", 0700)==-1)
-	{
-//	printf("Failed to create working directory: %s\n",strerror(errno));
-//	return 1;
-	}
-
-
-FILE* file=fopen("test/preview.png","w");
+FILE* file=fopen("test/preview.png","wb");
 	if(file)
 	{
 	image_write_png(&(project->preview),file);
@@ -778,7 +732,7 @@ FILE* file=fopen("test/preview.png","w");
 	}
 	else
 	{
-	printf("Failed to write file test/preview.png\n");
+	print_msg("Failed to write file test/preview.png\n");
 	return 1;
 	}	
 
@@ -804,7 +758,7 @@ FILE* file=fopen("test/preview.png","w");
 		//Write image file
 		char path[256];	
 		sprintf(path,"test/car_%d_%d.png",i,j);
-		FILE* file=fopen(path,"w");
+		FILE* file=fopen(path,"wb");
 			if(file)
 			{
 			image_write_png(&image,file);
@@ -812,7 +766,7 @@ FILE* file=fopen("test/preview.png","w");
 			}
 			else
 			{
-			printf("Failed to write file %s\n",path);
+			print_msg("Failed to write file %s\n",path);
 			exit(1);
 			}
 		image_destroy(&image);	
