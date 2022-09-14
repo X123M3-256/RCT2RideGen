@@ -11,5 +11,5 @@ link_directories(/usr/local/Cellar/assimp/5.0.0/lib)
 
 add_executable(makeride src/main.c src/project.c)
 set_property(TARGET makeride PROPERTY C_STANDARD 99)
-target_link_libraries (makeride m ${PNG_LIBRARY} Image IsoRender assimp embree3 jansson zip)
+target_link_libraries (makeride m ${PNG_LIBRARY} IsoRender assimp embree3 jansson zip)
 
