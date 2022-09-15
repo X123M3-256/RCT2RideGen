@@ -18,10 +18,8 @@ set_property(TARGET makevehicle PROPERTY C_STANDARD 99)
 IF (WIN32)
 	target_link_libraries(makevehicle png.a z.a)
 ELSE()
-	target_link_libraries(makevehicle ${PNG_LIBRARY_DIRS} ${ZLIB_LIBRARY_DIRS})
+	target_link_libraries(makevehicle ${PNG_LIBRARY} ${ZLIB_LIBRARY})
 ENDIF()
 
-target_link_libraries(makevehicle)
-
-target_link_libraries (makevehicle m IsoRender libzip assimp::assimp embree jansson)
+target_link_libraries (makevehicle m IsoRender libzip::zip assimp::assimp embree jansson)
 
