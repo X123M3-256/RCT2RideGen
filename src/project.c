@@ -8,10 +8,13 @@
 #include <dirent.h>
 #include <errno.h>
 #include <jansson.h>
+#include <zip.h>
 #include <image.h>
 #include "project.h"
 
 void print_msg(const char* fmt,...);
+
+#define MAX_PATH_LENGTH 512
 
 #define M_PI_8 (M_PI/8.0)
 #define M_PI_12 (M_PI/12.0)
@@ -462,7 +465,49 @@ void project_add_model_to_context(project_t* project,context_t* context,model_t*
 	}
 }
 
-int project_export(project_t* project,context_t* context,const char* output_directory)
+int project_parkobj_add(project_t* project,zip_t* archive,const char* archive_path)
+{
+char path[MAX_PATH_LENGTH];
+snprintf(path,MAX_PATH_LENGTH,"object/%s",archive_path);
+
+FILE* file=fopen(path,"rb");
+	if(file==NULL)
+	{
+	print_msg("Error: Unable to open \"%s\"",path);
+	zip_close(archive);
+	return 1;
+	}
+
+zip_source_t* src=zip_source_filep(archive,file,0,-1);
+	if(src==NULL)
+	{
+	print_msg("Error: zip_source_file failed");
+	zip_close(archive);
+	return 1;
+	}
+
+	if(zip_file_add(archive,archive_path, src, ZIP_FL_OVERWRITE)<0)
+	{
+	print_msg("Error: Unable to add \"%s\" to ZIP archive",archive_path);
+	zip_close(archive);
+	return 1;
+	}
+return 0;
+}
+
+void project_clean_working_dir(project_t* project)
+{
+remove("object/object.json");
+remove("object/images/preview.png");
+	for(int i=0;i<project->num_vehicles;i++)
+	{
+	char path[MAX_PATH_LENGTH];
+	snprintf(path,MAX_PATH_LENGTH,"images/car_%d.png",i);
+	remove(path);
+	}
+}
+
+json_t* project_generate_json(project_t* project)
 {
 //Create JSON file
 json_t* json=json_object();
@@ -506,7 +551,6 @@ json_t* car_color_presets=json_array();
 	json_array_append_new(car_color_presets,arr);
 	}
 json_object_set_new(properties,"carColours",car_color_presets);
-
 
 json_t* cars=json_array();
 	for(int i=0;i<project->num_vehicles;i++)
@@ -629,7 +673,11 @@ json_object_set_new(capacity,"en-GB",json_string((char*)project->capacity));
 json_object_set_new(strings,"capacity",capacity);
 json_object_set_new(json,"strings",strings);
 
-//Render sprites
+return json;
+}
+
+json_t* project_render_sprites(project_t* project,context_t* context)
+{
 json_t* images_json=json_array();
 
 //Write preview image
@@ -642,7 +690,8 @@ FILE* file=fopen("object/images/preview.png","wb");
 	else
 	{
 	print_msg("Failed to write file object/images/preview.png");
-	return 1;
+	json_decref(images_json);
+	return NULL;
 	}	
 //Write preview image JSON
 	for(int i=0;i<3;i++)
@@ -691,14 +740,14 @@ FILE* file=fopen("object/images/preview.png","wb");
 	int* y_coords=calloc(num_images,sizeof(int));
 	image_create_atlas(&atlas,images,num_images,x_coords,y_coords);
 	//Write image json
-	char path[256];
-	sprintf(path,"images/car_%d.png",i);
+	char path[MAX_PATH_LENGTH];
+	snprintf(path,MAX_PATH_LENGTH,"images/car_%d.png",i);
 		for(int i=0;i<num_images;i++)
 		{
 		json_array_append_new(images_json,json_image(path,images[i].x_offset,images[i].y_offset,x_coords[i],y_coords[i],images[i].width,images[i].height));
 		}
 	//Write image file	
-	sprintf(path,"object/images/car_%d.png",i);
+	snprintf(path,MAX_PATH_LENGTH,"object/images/car_%d.png",i);
 	FILE* file=fopen(path,"wb");
 		if(file)
 		{
@@ -708,35 +757,73 @@ FILE* file=fopen("object/images/preview.png","wb");
 		else
 		{
 		print_msg("Failed to write file %s",path);
-		exit(1);
+		json_decref(images_json);
+		return NULL;
 		}
 		for(int i=0;i<num_images;i++)image_destroy(images+i);	
 	free(images);
 	image_destroy(&atlas);
 	}
+return images_json;
+}
 
+int project_make_parkobj(project_t* project,const char* path)
+{
+int error = 0;
+zip_t* archive=zip_open(path,ZIP_CREATE|ZIP_TRUNCATE,&error);
+	if(archive==NULL)
+	{
+	print_msg("Error: Unable to create \"%s\"",path);
+	zip_close(archive);
+	return 1;
+	}
+	if(zip_dir_add(archive,"images",ZIP_FL_ENC_UTF_8)<0)
+	{
+	print_msg("Error: Unable to add subdirectory \"images\" to ZIP archive");
+	zip_close(archive);
+	return 1;
+	}
+
+	if(project_parkobj_add(project,archive,"object.json"))return 1;
+	if(project_parkobj_add(project,archive,"images/preview.png"))return 1;
+	for(int i=0;i<project->num_vehicles;i++)
+	{
+	char path[MAX_PATH_LENGTH];
+	snprintf(path,MAX_PATH_LENGTH,"images/car_%d.png",i);
+		if(project_parkobj_add(project,archive,path))return 1;
+	}
+	if(zip_close(archive)<0)
+	{
+	print_msg("Error: Failed to write ZIP file \"%s\"",path);
+	return 1;
+	}
+return 0;
+}
+
+int project_export(project_t* project,context_t* context,const char* output_directory)
+{
+project_clean_working_dir(project);
+
+json_t* json=project_generate_json(project);
+
+json_t* images_json=NULL;
+
+images_json=project_render_sprites(project,context);
+
+	if(images_json==NULL)return 1;
 json_object_set_new(json,"images",images_json);
 
 json_dump_file(json,"object/object.json",JSON_INDENT(4));
 
+//Export .parkobj file
+char path[MAX_PATH_LENGTH];
+snprintf(path,MAX_PATH_LENGTH,"%s/%s.parkobj",output_directory,project->id);
+	if(project_make_parkobj(project,path))return 1;
 return 0;
 }
 
 int project_export_test(project_t* project,context_t* context)
 {
-FILE* file=fopen("test/preview.png","wb");
-	if(file)
-	{
-	image_write_png(&(project->preview),file);
-	fclose(file);
-	}
-	else
-	{
-	print_msg("Failed to write file test/preview.png\n");
-	return 1;
-	}	
-
-
 	for(int i=0;i<project->num_vehicles;i++)
 	{
 	int num_frames=project->vehicles[i].flags&VEHICLE_RESTRAINT_ANIMATION?4:1;
@@ -756,8 +843,8 @@ FILE* file=fopen("test/preview.png","wb");
 		context_render_view(context,rotate_y(M_PI),&image);
 		context_end_render(context);
 		//Write image file
-		char path[256];	
-		sprintf(path,"test/car_%d_%d.png",i,j);
+		char path[MAX_PATH_LENGTH];	
+		snprintf(path,MAX_PATH_LENGTH,"test/car_%d_%d.png",i,j);
 		FILE* file=fopen(path,"wb");
 			if(file)
 			{

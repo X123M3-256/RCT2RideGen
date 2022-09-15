@@ -17,5 +17,5 @@ ELSE()
 	target_link_libraries (makevehicle ${PNG_LIBRARIES} ${ZLIB_LIBRARIES})
 ENDIF()
 
-target_link_libraries (makevehicle m assimp embree3 jansson IsoRender)
+target_link_libraries (makevehicle m zip assimp embree3 jansson IsoRender)
 
