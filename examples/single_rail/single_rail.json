@@ -4,7 +4,7 @@
 "name":"Single Rail Roller Coaster Trains",
 "description":"Roller coaster trains in which riders are seated single file",
 "capacity":"1 passenger per car",
-"preview":"single_rail/preview.png",
+"preview":"examples/single_rail/preview.png",
 "sprites":["flat","gentle_slopes","steep_slopes","vertical_slopes","diagonals","banked_turns","inline_twists","banked_sloped_turns","corkscrews","zero_g_rolls"],
 "zero_cars":0,
 "min_cars_per_train":5,
@@ -20,7 +20,7 @@
 	["yellow","yellow","bright_red"]
 	],
 "configuration":{"default":1,"front":0},
-"meshes":["single_rail/front_car.obj","single_rail/car.obj","single_rail/peep.obj","single_rail/restraint.obj","single_rail/peep_restraint.obj"],
+"meshes":["examples/single_rail/front_car.obj","examples/single_rail/car.obj","examples/single_rail/peep.obj","examples/single_rail/restraint.obj","examples/single_rail/peep_restraint.obj"],
 "vehicles":
 	[
 		{
