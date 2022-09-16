@@ -557,7 +557,7 @@ json_t* cars=json_array();
 	{
 	json_t* car=json_object();
 	json_object_set_new(car,"rotationFrameMask",json_integer(31));
-	json_object_set_new(car,"spacing",json_integer((project->vehicles[i].spacing*262144)/TILE_SIZE));
+	json_object_set_new(car,"spacing",json_integer((project->vehicles[i].spacing*278912)/TILE_SIZE));
 	json_object_set_new(car,"mass",json_integer(project->vehicles[i].mass));
 	json_object_set_new(car,"numSeats",json_integer(project->vehicles[i].num_riders));
 	json_object_set_new(car,"numSeatRows",json_integer(project->vehicles[i].num_rider_models));
@@ -800,17 +800,36 @@ zip_t* archive=zip_open(path,ZIP_CREATE|ZIP_TRUNCATE,&error);
 return 0;
 }
 
-int project_export(project_t* project,context_t* context,const char* output_directory)
+int project_export(project_t* project,context_t* context,const char* output_directory,int skip_render)
 {
-project_clean_working_dir(project);
-
 json_t* json=project_generate_json(project);
 
 json_t* images_json=NULL;
-
-images_json=project_render_sprites(project,context);
-
-	if(images_json==NULL)return 1;
+	if(skip_render)
+	{
+	//Attempt to load image list from previous object.json
+	json_error_t error;
+	json_t* object_json=json_load_file("object/object.json",0,&error);
+		if(object_json==NULL)
+		{
+		print_msg("Error: Unable to load object/object.json (file does not exist or is invalid)");
+		return 1;
+		}
+	images_json=json_object_get(object_json,"images");
+	//Do sanity checks
+		if(!json_is_array(images_json))
+		{
+		print_msg("Error: Property \"images\" is not an array");
+		return 1;
+		}
+	//TODO consider also checking if images has the right length
+	}
+	else
+	{
+	//Render new images
+	project_clean_working_dir(project);
+	images_json=project_render_sprites(project,context);
+	}
 json_object_set_new(json,"images",images_json);
 
 json_dump_file(json,"object/object.json",JSON_INDENT(4));
