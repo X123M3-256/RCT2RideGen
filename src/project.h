@@ -139,12 +139,8 @@ image_t preview;
 }project_t;
 
 int count_animation_frames(uint16_t sprites);
-
-
-
 int count_sprites_from_flags(uint16_t sprites,int flags);
-
-int project_export(project_t* project,context_t* context,const char* output_directory);
+int project_export(project_t* project,context_t* context,const char* output_directory,int skip_render);
 int project_export_test(project_t* project,context_t* context);
 
 

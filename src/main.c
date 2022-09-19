@@ -84,7 +84,6 @@ json_t* load_optional_array(json_t* json)
 	}
 }
 
-
 int load_model(model_t* model,json_t* json,int num_meshes,int num_frames)
 {
 	if(!json)
@@ -387,7 +386,6 @@ int num_lights=json_array_size(json);
 return 0;
 }
 
-
 int load_project(project_t* project,json_t* json)
 {
 json_t* id=json_object_get(json,"id");
@@ -594,12 +592,18 @@ int main(int argc,char** argv)
 project_t project;
 
 const char* filename=NULL;
-int test_mode=0;
+int mode=0;
 
-	if(argc==3&&(strcmp("--test",argv[1])==0||strcmp("-t",argv[1])==0))
+	if(argc==3)
 	{
+		if(strcmp("--test",argv[1])==0)mode=2;
+		else if(strcmp("--skip-render",argv[1])==0)mode=1;
+		else
+		{
+		print_msg("Error: Unrecognized option %s",argv[1]);	
+		return 1;
+		}
 	filename=argv[2];
-	test_mode=1;
 	}
 	else if(argc==2)
 	{
@@ -668,15 +672,14 @@ json_t* light_array=json_object_get(project_json,"lights");
 	if(load_project(&project,project_json))return 1;
 
 context_t context;
-context_init(&context,lights,num_lights,palette_rct2(),test_mode?0.125*TILE_SIZE:TILE_SIZE);
-	if(test_mode)
+context_init(&context,lights,num_lights,palette_rct2(),(mode==2)?0.125*TILE_SIZE:TILE_SIZE);
+	if(mode==2)
 	{
-		
 		if(project_export_test(&project,&context))return 1;
 	}
 	else
 	{
-		if(project_export(&project,&context,output_directory))return 1;
+		if(project_export(&project,&context,output_directory,mode==1))return 1;
 	}
 context_destroy(&context);
 return 0;
