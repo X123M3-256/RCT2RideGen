@@ -396,6 +396,20 @@ json_t* id=json_object_get(json,"id");
 	}
 project->id=(uint8_t*)strdup(json_string_value(id));
 
+
+json_t* original_id=json_object_get(json,"original_id");
+	if(original_id!=NULL&&!json_is_string(original_id))
+	{
+	print_msg("Error: Property \"original_id\" is not a string");
+	return 1;
+	}
+	if(original_id!=NULL)
+	{
+	printf("Original ID %s\n",json_string_value(original_id));
+	project->original_id=(uint8_t*)strdup(json_string_value(original_id));
+	}
+	else project->original_id=NULL;
+
 json_t* name=json_object_get(json,"name");
 	if(name==NULL||!json_is_string(name))
 	{
@@ -584,6 +598,7 @@ project->num_vehicles=json_array_size(vehicles);
 	project->num_sprites+=project->vehicles[i].num_sprites;
 	}
 
+project->category=3;
 return 0;
 }
 
